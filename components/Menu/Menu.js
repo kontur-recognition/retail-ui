@@ -51,9 +51,6 @@ export default class Menu extends React.Component {
                 _enableIconPadding: true,
               });
             }
-                });
-              }
-            }
             if (isActiveElement(child)) {
               const highlight = this.state.highlightedIndex === index;
 
