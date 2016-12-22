@@ -164,12 +164,9 @@ class Button extends React.Component {
       <span className={styles.wrap} style={wrapStyle}>
         <button {...rootProps}>
           {loading}
-          <div className={styles.buttonContent}>
-            {icon}
-            <div className={styles.caption}>
+          <div className={styles.caption}>
             {icon}
             {this.props.children}
-          </div>
           </div>
           {error}
         </button>
