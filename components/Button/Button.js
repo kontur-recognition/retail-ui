@@ -153,9 +153,11 @@ class Button extends React.Component {
 
     let icon = null;
     if (this.props.icon) {
-      icon =(<span className={styles.icon}>
-        <Icon name={this.props.icon} />
-      </span>);
+      icon = (
+        <span className={styles.icon}>
+          <Icon name={this.props.icon} />
+        </span>
+      );
     }
 
     return (
@@ -165,6 +167,7 @@ class Button extends React.Component {
           <div className={styles.buttonContent}>
             {icon}
             <div className={styles.caption}>
+            {icon}
             {this.props.children}
           </div>
           </div>

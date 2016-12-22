@@ -12,10 +12,17 @@ import Upgrades from '../../lib/Upgrades';
 import '../ensureOldIEClassName';
 import styles from './Input.less';
 
-var polyfillPlaceholder = false;
+let polyfillPlaceholder = false;
 if (typeof window !== 'undefined' && window.document
     && window.document.createElement) {
-  polyfillPlaceholder = !('placeholder' in document.createElement('input'));
+
+  const sAgent = window.navigator.userAgent;
+
+  if (!('placeholder' in document.createElement('input'))
+      || !!navigator.userAgent.match(/Trident\/7\./)
+      || sAgent.indexOf('MSIE') > 0) {
+    polyfillPlaceholder = true;
+  }
 }
 
 const INPUT_PASS_PROPS = {
@@ -23,7 +30,7 @@ const INPUT_PASS_PROPS = {
   disabled: true,
   id: true,
   maxLength: true,
-  placeholder: true,
+  placeholder: !polyfillPlaceholder,
   title: true,
 
   onBlur: true,
@@ -211,6 +218,7 @@ export default class Input extends React.Component {
     }
 
     var placeholder = null;
+
     if (this.state.polyfillPlaceholder && this.props.placeholder
         && !this.props.mask && !this.props.value) {
       placeholder = (
@@ -330,6 +338,13 @@ export default class Input extends React.Component {
   }
 
   _handleChange(event) {
+    if (polyfillPlaceholder) {
+      const fieldIsEmpty = event.target.value === '';
+      if (this.state.polyfillPlaceholder !== fieldIsEmpty) {
+        this.setState({polyfillPlaceholder: fieldIsEmpty});
+      }
+    }
+
     if (this.props.onChange) {
       this.props.onChange(event, event.target.value);
     }

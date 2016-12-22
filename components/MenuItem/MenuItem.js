@@ -17,7 +17,7 @@ export default class MenuItem extends React.Component {
   static propTypes = {
     alkoLink: PropTypes.bool,
 
-    comment: PropTypes.string,
+    comment: PropTypes.node,
 
     disabled: PropTypes.bool,
 
@@ -46,7 +46,8 @@ export default class MenuItem extends React.Component {
     loose?: bool,
     state?: MenuItemState,
     target?: string,
-    onClick?: () => void,
+    onClick?: (event: Event) => void,
+    onMouseDown?: (event: Event) => void,
     children?: any,
   };
 

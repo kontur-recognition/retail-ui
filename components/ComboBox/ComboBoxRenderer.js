@@ -1,13 +1,11 @@
 // @flow
 /* global React$Element */
-import classNames from 'classnames';
-import events from 'add-event-listener';
 import React from 'react';
 import ReactDOM from 'react-dom';
 
 import filterProps from '../filterProps';
 import listenFocusOutside from '../../lib/listenFocusOutside';
-import Upgrades from '../../lib/Upgrades';
+import events from 'add-event-listener';
 
 import DropdownContainer from '../DropdownContainer/DropdownContainer';
 import Input from '../Input';
@@ -87,8 +85,9 @@ type Props = BaseProps & {
 type State = {
   opened: bool,
   searchText: string,
-  changed: bool, // If user typed anything after opening.
+  isEditing: bool,
   result: ?SourceResult,
+  selected: number,
 };
 
 class ComboBoxRenderer extends React.Component {
@@ -101,7 +100,6 @@ class ComboBoxRenderer extends React.Component {
   static static(element: ((() => React.Element<any>) | React.Element<any>)) {
     return element;
   }
-
 
   static defaultProps = {
     renderItem,
@@ -119,8 +117,10 @@ class ComboBoxRenderer extends React.Component {
   _menu: ?Menu = null;
   _focusSubscribtion: ?{remove: () => void} = null;
   _lastError: ErrorKind = null;
-  _focusReporter;
-  _pendingRecover = false;
+  _error: ErrorKind = null;
+  _ignoreRecover = true;
+  _ignoreBlur = true;
+  _fetchingId = 0;
 
   constructor(props: Props, context: mixed) {
     super(props, context);
@@ -128,52 +128,35 @@ class ComboBoxRenderer extends React.Component {
     this.state = {
       opened: false,
       searchText: '',
-      changed: false,
       result: null,
+      isEditing: false,
       selected: -1,
     };
-
-    this._focusReporter = new FocusReporter(
-      () => (this.props.onAlkoFocus && this.props.onAlkoFocus()),
-      () => (this.props.onAlkoBlur && this.props.onAlkoBlur()),
-    );
   }
 
   render() {
-    const className = classNames({
-      [styles.root]: true,
-      [styles.deprecated_oldSize]: !Upgrades.isHeight34Enabled(),
-    });
-
-    let valueEl;
-    if (this.state.opened || this.state.searchText) {
-      valueEl = this.renderOpenedValue();
-    } else {
-      valueEl = this.renderClosedValue();
-    }
-
     return (
-      <label className={className} style={{width: this.props.width}}>
-        {valueEl}
+      <label className={styles.root} style={{width: this.props.width}}>
+        {this.state.isEditing ? this.renderInput() : this.renderValue()}
         {this.state.opened && (
-          <div ref={this._refMenuHolder}>
+          <div ref={this._refMenuHolder} className={styles.menuHolder}>
             {this.renderMenu()}
           </div>
         )}
         {this.props.openButton && (
-          <div className={styles.arrow} onMouseDown={this._handleArrowMouseDown}
+          <div
+            className={styles.arrow}
             onClick={this._handleArrowClick}
+            onMouseDown={this._handleArrowMouseDown}
           />
         )}
       </label>
     );
   }
 
-  renderOpenedValue() {
+  renderInput() {
     const inputProps = filterProps(this.props, INPUT_PASS_PROPS);
-    if (!this.state.opened) {
-      inputProps.error = true;
-    }
+
     return (
       <div className={styles.input}>
         <Input ref={this._refFocusable} {...inputProps}
@@ -182,35 +165,30 @@ class ComboBoxRenderer extends React.Component {
           disabled={this.props.disabled}
           onChange={this._handleInputChange}
           onKeyDown={this._handleInputKey}
-          onFocus={this._handleFocus}
-          onBlur={this._handleBlur}
         />
       </div>
     );
   }
 
-  renderClosedValue() {
+  renderValue() {
     const inputProps = filterProps(this.props, INPUT_PASS_PROPS);
 
-    let value;
-    if (this.props.value == null) {
-      value = (
-        <span className={styles.placeholder}>{this.props.placeholder}</span>
-      );
-    } else {
-      value = this.props.renderValue(this.props.value, this.props.info);
-    }
+    const value = this.props.value
+      ? this.props.renderValue(this.props.value, this.props.info)
+      : <span className={styles.placeholder}>
+          {this.props.placeholder}
+        </span>;
+
+    const isNotRecovered = !!this._error;
 
     return (
       <InputLikeText ref={this._refFocusable} {...inputProps}
         padRight={this.props.openButton}
         onClick={this._handleValueClick}
-        onKeyDown={this._handleValueKey}
-        onKeyPress={this._handleValueKeyPress}
-        onFocus={this._handleFocus}
-        onBlur={this._handleBlur}
+        onFocus={this._handleValueClick}
+        error={isNotRecovered || this.props.error}
       >
-        {value}
+        {isNotRecovered ? this.state.searchText : value}
       </InputLikeText>
     );
   }
@@ -228,6 +206,7 @@ class ComboBoxRenderer extends React.Component {
         getParent={() => ReactDOM.findDOMNode(this)}
         align={this.props.menuAlign}
         disablePortal={this.props.disablePortal}
+        offsetY={1}
       >
         <Menu ref={this._refMenu} maxHeight={200}>
           {isEmptyResults
@@ -244,21 +223,20 @@ class ComboBoxRenderer extends React.Component {
     return mapResult(result, (value, info, i) => {
       if (typeof value === 'function' || React.isValidElement(value)) {
         const element = typeof value === 'function' ? value() : value;
-        return React.cloneElement(
-            element,
-          {
-            key: i,
-            onClick: this._handleItemClick.bind(this, element.props),
-          },
-          );
+        return React.cloneElement(element, {
+          key: i,
+          onClick: (event) => this._handleItemClick(event, element.props),
+        });
       }
       return (
-          <MenuItem key={i}
-            onClick={this._handleItemClick.bind(this, {value, info})}
-          >
-            {state => this.props.renderItem(value, info, state)}
-          </MenuItem>
-        );
+        <MenuItem key={i}
+          onClick={(event: Event) => {
+            this._handleItemClick(event, {value, info});
+          }}
+        >
+          {state => this.props.renderItem(value, info, state)}
+        </MenuItem>
+      );
     });
   }
 
@@ -304,10 +282,41 @@ class ComboBoxRenderer extends React.Component {
     if (this.props.autoFocus) {
       this._focus();
     }
+
+    /* Needs to handle clicks in menu */
+    events.addEventListener(document, 'click', this._blurIfNeeded);
+  }
+
+  _blurIfNeeded = (event) => {
+    const domNodes = this.getDomNodes();
+    if (domNodes.some(node => node.contains(event.target))) {
+      return;
+    }
+
+    this._handleBlur();
+  }
+
+  /**
+   * returns dom nodes of input and menu
+   */
+  getDomNodes = () => {
+    const ret = [ReactDOM.findDOMNode(this)];
+    if (this._menu) {
+      // flow needs this for some reasons
+      const menu = this._menu;
+
+      // will be null if menu is empty
+      const menuNode = ReactDOM.findDOMNode(menu);
+      if (menuNode) {
+        ret.push(ReactDOM.findDOMNode(menu));
+      }
+    }
+    return ret;
   }
 
   componentWillUnmount() {
     this._mounted = false;
+    events.removeEventListener(document, 'click', this._blurIfNeeded);
   }
 
   _refFocusable = (el: ?HTMLInputElement) => {
@@ -318,29 +327,12 @@ class ComboBoxRenderer extends React.Component {
     if (this._focusSubscribtion) {
       this._focusSubscribtion.remove();
       this._focusSubscribtion = null;
-
-      events.removeEventListener(
-        document, 'mousedown', this._handleNativeDocClick
-      );
     }
 
     if (menuHolder) {
       this._focusSubscribtion = listenFocusOutside(
-        () => {
-          const ret = [ReactDOM.findDOMNode(this)];
-          if (this._menu) {
-            ret.push(ReactDOM.findDOMNode(this._menu));
-          }
-          return ret;
-        },
-        () => {
-          this._close();
-          this._tryRecover();
-        }
-      );
-
-      events.addEventListener(
-        document, 'mousedown', this._handleNativeDocClick
+        this.getDomNodes,
+        this._handleBlur
       );
     }
   };
@@ -351,108 +343,71 @@ class ComboBoxRenderer extends React.Component {
 
   _handleInputChange = (event: SyntheticEvent) => {
     const pattern = (event.target: any).value;
-    this._open(); // TODO: remove?
     this.setState({
       searchText: pattern,
-      changed: true,
+      opened: true,
     });
     this._fetchList(pattern);
+    this._ignoreRecover = false;
   };
 
   _handleInputKey = (event: SyntheticKeyboardEvent) => {
     switch (event.key) {
       case 'ArrowUp':
         event.preventDefault();
+
+        if (!this.state.opened) {
+          this.setState({opened: true});
+          safelyCall(this.props.onOpen);
+        }
+
         this._menu && this._menu.up();
         break;
       case 'ArrowDown':
         event.preventDefault();
+
+        if (!this.state.opened) {
+          this.setState({opened: true});
+          safelyCall(this.props.onOpen);
+        }
+
         this._menu && this._menu.down();
         break;
       case 'Enter':
         event.preventDefault();
-
         const handled = this._menu && this._menu.enter();
         if (!handled) {
           this._tryRecover();
 
           // Close ComboBox only if Enter wasn't handled by the Menu.
-          this._close(() => {
-            this._focus();
-          });
+          this._handleBlur();
         }
         break;
       case 'Escape':
-        this.setState({searchText: ''});
-        this._close(() => {
-          this._focus();
-        });
+        event.preventDefault();
+        if (!this.state.opened) {
+          return;
+        }
+        this._close();
         break;
     }
   };
 
   _handleValueClick = () => {
-    this._open();
-    this.setState({
-      searchText: '',
-      changed: false,
-      result: null,
-    });
     this._setCurrentSearchText(this.props.value, this.props.info);
-    this._focusAsync();
     this._fetchList('');
-  };
-
-  _handleValueKeyPress = (event: SyntheticKeyboardEvent) => {
-    // Prevent current char from being appended to the input element (chrome).
-    event.preventDefault();
-    const str = String.fromCharCode(event.charCode);
-    this._open();
-    this.setState(
-      {
-        searchText: str,
-        changed: true,
-      },
-      () => {
-        if (this._focusable) {
-          this._focusable.setSelectionRange(1, 1);
-        }
-      }
-    );
-    this._fetchList(str);
-  };
-
-  _handleValueKey = (event: SyntheticKeyboardEvent) => {
-    switch (event.key) {
-      case ' ':
-      case 'Enter':
-      case 'ArrowUp':
-      case 'ArrowDown':
-        event.preventDefault();
-        this._open();
-        this.setState({
-          searchText: '',
-          changed: false,
-        }, () => {
-          this._focus();
-        });
-        this._setCurrentSearchText(this.props.value, this.props.info);
-        this._fetchList('');
-        break;
-    }
+    this._handleFocus();
   };
 
   _handleItemClick(
+    event: Event,
     options: {value?: Value, info?: Info, onClick?: () => void}
   ) {
-    this.setState({searchText: ''});
-    this._close();
+    this.setState({searchText: '', opened: false, isEditing: false});
     this._change(options.value, options.info);
 
-    if (options.onClick) {
-      const onClick = options.onClick;
-      onClick();
-    }
+    safelyCall(options.onClick);
+    this._handleBlur();
   }
 
   _handleArrowMouseDown = (event: SyntheticMouseEvent) => {
@@ -465,53 +420,47 @@ class ComboBoxRenderer extends React.Component {
     }
   };
 
-  _handleNativeDocClick = (event: MouseEvent) => {
-    const target: Element = (event.target: any) || event.srcElement;
-
-    const thisDOM: Element = ReactDOM.findDOMNode(this);
-    const menuDOM: ?Element = this._menu && ReactDOM.findDOMNode(this._menu);
-    if (thisDOM.contains(target) || menuDOM && menuDOM.contains(target)) {
-      return;
-    }
-
-    // Go async to let blur event happen before focused element removed from the
-    // document.
-    this._pendingRecover = true;
-    process.nextTick(() => {
-      this._close();
-      // Between the ticks another _tryRecover might have been called. For
-      // instance, if clicked on another focusable element, following events
-      // will call _tryRecover: doc click, focus outside.
-      if (this._pendingRecover) {
-        this._tryRecover();
-      }
-    });
-  };
-
   _handleFocus = () => {
-    if (this.props.onFocus) {
-      this.props.onFocus();
+    /* Allow blur happen only if focus occured */
+    this._ignoreBlur = false;
+
+    this.setState({isEditing: true, opened: true});
+    safelyCall(this.props.onOpen);
+
+    if (!safelyCall(this.props.onFocus)) {
+      safelyCall(this.props.onAlkoFocus);
     }
-    this._handleValueClick();
-    this._focusReporter.focus();
   };
 
   _handleBlur = () => {
-    if (this.props.onBlur) {
-      this.props.onBlur();
+    if (this._ignoreBlur) {
+      return;
     }
-    if (!this.state.opened) {
-      this._focusReporter.blur();
+
+    this._close(true);
+    this._tryRecover();
+
+    if (!safelyCall(this.props.onBlur)) {
+      safelyCall(this.props.onAlkoBlur);
     }
+
+    /* Blur should occure only once */
+    this._ignoreBlur = true;
   };
 
+  _close = (endEdit?: bool) => {
+    this.setState({isEditing: !endEdit, opened: false, result: null});
+    safelyCall(this.props.onClose);
+  }
+
   _fetchList(pattern: string) {
+    const expectingId = ++this._fetchingId;
     this.props.source(pattern).then((result) => {
       if (!this._mounted) {
         return;
       }
 
-      if (this.state.searchText === pattern || !pattern) {
+      if (expectingId === this._fetchingId && this.state.opened) {
         this._menu && this._menu.reset();
         this.setState({result});
       }
@@ -519,26 +468,28 @@ class ComboBoxRenderer extends React.Component {
   }
 
   _focus = () => {
-    if (this._focusable) {
+    if (this._focusable && this._focusable.setSelectionRange) {
+      this._focusable.setSelectionRange(0, this.state.searchText.length);
+    } else if (this._focusable) {
       this._focusable.focus();
     }
   };
 
-  _focusAsync() {
-    this._focusReporter.focus();
-    process.nextTick(this._focus);
-  }
-
   _tryRecover() {
-    this._pendingRecover = false;
-    if (!this.state.changed) {
+    if (this._ignoreRecover) {
+      return;
+    }
+    this._ignoreRecover = true;
+
+    if (!this.props.recover) {
+      this._change(null);
       this.setState({searchText: ''});
-      this._close();
       return;
     }
 
     const searchText = this.state.searchText;
     let recovered: ?RecoverResult = null;
+
     if (typeof this.props.recover === 'function') {
       recovered = this.props.recover(searchText);
     } else if (this.props.recover === true) {
@@ -546,9 +497,7 @@ class ComboBoxRenderer extends React.Component {
     }
 
     if (recovered) {
-      this.setState({searchText: ''});
       this._change(recovered.value, recovered.info);
-      this._setError(null);
     } else {
       this._change(null);
       this._setError(this.state.searchText ? 'not_recovered' : null);
@@ -556,63 +505,43 @@ class ComboBoxRenderer extends React.Component {
   }
 
   _setError(error: ErrorKind) {
-    if (this._lastError !== error && this.props.onError) {
+    this._error = error;
+    if (this._lastError !== error) {
       this._lastError = error;
-      this.props.onError(error);
+      safelyCall(this.props.onError, error);
     }
   }
 
   _change(value: Value, info?: Info) {
-    if (this.props.onChange) {
-      this.props.onChange({target: {value}}, value, info);
-    }
-  }
+    safelyCall(this.props.onChange, {target: {value}}, value, info);
+    this._setError(null);
 
-  _open() {
-    this.setState({
-      opened: true,
-    });
-    if (this.props.onOpen) {
-      this.props.onOpen.call(null);
-    }
-  }
-
-  _close(callback: any) {
-    this.setState({
-      opened: false,
-      result: null,
-    }, callback);
-    if (this.props.onClose) {
-      this.props.onClose.call(null);
-    }
-    this._focusReporter.blur();
-  }
-
-  _findInfoByValue(value: Value): ?Info {
-    const {result} = this.state;
-    if (result) {
-      const index = result.values.findIndex((v) => v === value);
-      return result.infos && result.infos[index];
-    }
-
-    return null;
+    /* No need in recovers after value changes */
+    this._ignoreRecover = true;
   }
 
   _setCurrentSearchText(value: Value, info: ?Info) {
     const valueToString = this.props.valueToString ||
       this.props.alkoValueToText;
-    if (valueToString && value) {
-      const searchText = valueToString(value, info);
-      this.setState(
-        {searchText},
-        () => {
-          if (this._focusable && this._focusable.setSelectionRange) {
-            this._focusable.setSelectionRange(0, searchText.length);
-          }
-        },
-      );
+
+    if (valueToString) {
+      const searchText = value
+        ? valueToString(value, info)
+        : this.state.searchText;
+
+      return this.setState({searchText}, this._focus);
     }
+
+    return this.setState({searchText: ''}, this._focus);
   }
+}
+
+function safelyCall(fn: ?Function, ...args: any[]) {
+  if (fn) {
+    fn(...args);
+    return true;
+  }
+  return false;
 }
 
 function mapResult(
@@ -631,31 +560,6 @@ function renderValue(value, info) {
 
 function renderItem(value, info, state) {
   return info;
-}
-
-class FocusReporter {
-  _onFocus;
-  _onBlur;
-  _focused = false;
-
-  constructor(onFocus: () => void, onBlur: () => void) {
-    this._onFocus = onFocus;
-    this._onBlur = onBlur;
-  }
-
-  focus = () => {
-    if (!this._focused) {
-      this._focused = true;
-      this._onFocus();
-    }
-  };
-
-  blur = () => {
-    if (this._focused) {
-      this._focused = false;
-      this._onBlur();
-    }
-  };
 }
 
 export default ComboBoxRenderer;
