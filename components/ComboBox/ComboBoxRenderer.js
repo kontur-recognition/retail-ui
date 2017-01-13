@@ -21,6 +21,7 @@ const INPUT_PASS_PROPS = {
   error: true,
   warning: true,
   width: true,
+  disabled: true,
 };
 
 export type Value = any;
@@ -162,7 +163,6 @@ class ComboBoxRenderer extends React.Component {
         <Input ref={this._refFocusable} {...inputProps}
           value={this.state.searchText}
           rightIcon={this.props.openButton && <span />}
-          disabled={this.props.disabled}
           onChange={this._handleInputChange}
           onKeyDown={this._handleInputKey}
         />
@@ -287,9 +287,12 @@ class ComboBoxRenderer extends React.Component {
     events.addEventListener(document, 'click', this._blurIfNeeded);
   }
 
-  _blurIfNeeded = (event) => {
+  _blurIfNeeded = (event: Event) => {
     const domNodes = this.getDomNodes();
-    if (domNodes.some(node => node.contains(event.target))) {
+    const containsTarget =
+      node => node.contains(event.target || event.srcElement);
+
+    if (domNodes.some(containsTarget)) {
       return;
     }
 
