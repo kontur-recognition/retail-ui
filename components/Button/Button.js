@@ -5,16 +5,10 @@ import React, {PropTypes} from 'react';
 
 import Corners from './Corners';
 import Icon from '../Icon';
-import Upgrades from '../../lib/Upgrades';
+import browser from '../../lib/browserNormalizer';
 
 import '../ensureOldIEClassName';
 import styles from './Button.less';
-
-const DEPRECATED_SIZE_CLASSES = {
-  default: styles.deprecated_sizeDefault,
-  small: styles.deprecated_sizeDefault, // for new default size
-  large: styles.deprecated_sizeLarge,
-};
 
 const SIZE_CLASSES = {
   small: styles.sizeSmall,
@@ -40,6 +34,9 @@ type Props = {
   width?: number | string,
   onClick?: (e: SyntheticMouseEvent) => void,
   onKeyDown?: (e: SyntheticKeyboardEvent) => void,
+  onMouseEnter?: (e: SyntheticMouseEvent) => void,
+  onMouseLeave?: (e: SyntheticMouseEvent) => void,
+  onMouseOver?: (e: SyntheticMouseEvent) => void,
 };
 
 class Button extends React.Component {
@@ -88,6 +85,12 @@ class Button extends React.Component {
      * Click handler.
      */
     onClick: PropTypes.func,
+
+    onMouseEnter: PropTypes.func,
+
+    onMouseLeave: PropTypes.func,
+
+    onMouseOver: PropTypes.func,
   };
 
   static defaultProps = {
@@ -118,7 +121,7 @@ class Button extends React.Component {
         [styles.noPadding]: this.props._noPadding,
         [styles.noRightPadding]: this.props._noRightPadding,
         [styles.buttonWithIcon]: !!this.props.icon,
-        ...this._getSizeClassMap(),
+        [SIZE_CLASSES[this.props.size]]: true,
       }),
       style: {
         borderRadius: `${corners & Corners.TOP_LEFT ? 0 : radius}` +
@@ -129,7 +132,10 @@ class Button extends React.Component {
       disabled: this.props.disabled || this.props.loading,
       onClick: this.props.onClick,
       onKeyDown: this.props.onKeyDown,
-      onMouseDown: this._handleMouseDown, //to prevent focus on click
+      onMouseDown: this._handleMouseDown, // to prevent focus on click
+      onMouseEnter: this.props.onMouseEnter,
+      onMouseLeave: this.props.onMouseLeave,
+      onMouseOver: this.props.onMouseOver,
     };
     if (this.props.align) {
       rootProps.style.textAlign = this.props.align;
@@ -176,20 +182,10 @@ class Button extends React.Component {
   }
 
   _handleMouseDown(e) {
-    document.activeElement.blur();
-    e.preventDefault();
-  }
-
-  _getSizeClassMap() {
-    if (!Upgrades.isHeight34Enabled()) {
-      return {
-        [DEPRECATED_SIZE_CLASSES[(this.props.size: any)]]: true,
-      };
+    if (browser.hasFocusOnButtonClick && document.activeElement) {
+      document.activeElement.blur();
+      e.preventDefault();
     }
-
-    return {
-      [SIZE_CLASSES[this.props.size]]: true,
-    };
   }
 }
 

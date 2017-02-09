@@ -19,6 +19,10 @@ const PASS_PROPS = {
 
   onFocus: true,
   onBlur: true,
+
+  onMouseEnter: true,
+  onMouseLeave: true,
+  onMouseOver: true,
 };
 
 class Textarea extends React.Component {
@@ -52,11 +56,19 @@ class Textarea extends React.Component {
     onChange: PropTypes.func,
 
     onFocus: PropTypes.func,
+
+    onMouseEnter: PropTypes.func,
+
+    onMouseLeave: PropTypes.func,
+
+    onMouseOver: PropTypes.func,
   };
 
   static defaultProps = {
     rows: '3',
   };
+
+  _node: HTMLTextAreaElement;
 
   constructor(props, context) {
     super(props, context);
@@ -77,7 +89,7 @@ class Textarea extends React.Component {
     }
 
     return (
-      <textarea {...props} onChange={this.handleChange} />
+      <textarea {...props} ref={this._ref} onChange={this.handleChange} />
     );
   }
 
@@ -86,6 +98,16 @@ class Textarea extends React.Component {
       this.props.onChange(event, event.target.value);
     }
   };
+
+  focus() {
+    if (this._node) {
+      this._node.focus();
+    }
+  }
+
+  _ref = (el) => {
+    this._node = el;
+  }
 }
 
 export default Textarea;
