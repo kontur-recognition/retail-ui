@@ -1,6 +1,6 @@
 // @flow
 
-import React, {PropTypes} from 'react';
+import React, { PropTypes } from 'react';
 
 import LayoutEvents from '../../lib/LayoutEvents';
 import RenderContainer from '../RenderContainer/RenderContainer';
@@ -24,19 +24,19 @@ type State = {
 
 export default class DropdownContainer extends React.Component {
   static contextTypes = {
-    rt_inModal: PropTypes.bool,
+    rt_inModal: PropTypes.bool
   };
 
   static defaultProps = {
     align: 'left',
     disablePortal: false,
     offsetX: 0,
-    offsetY: -1,
+    offsetY: -1
   };
 
   props: Props;
   state: State = {
-    position: null,
+    position: null
   };
 
   _dom;
@@ -48,12 +48,12 @@ export default class DropdownContainer extends React.Component {
       top: '0',
       left: null,
       right: null,
-      zIndex: this.context.rt_inModal ? 1100 : 900,
+      zIndex: this.context.rt_inModal ? 1100 : 900
     };
     if (this.state.position) {
       style = {
         ...style,
-        ...this.state.position,
+        ...this.state.position
       };
     }
     if (this.props.disablePortal){
@@ -61,8 +61,8 @@ export default class DropdownContainer extends React.Component {
         ...style,
         ...{
           top: null,
-          minWidth: '100%',
-        },
+          minWidth: '100%'
+        }
       };
     }
 
@@ -98,23 +98,28 @@ export default class DropdownContainer extends React.Component {
     if (target && dom) {
       const targetRect = target.getBoundingClientRect();
       const docEl = document.documentElement;
+
+      if (!docEl) {
+        throw Error('There is no "documentElement" in "document"');
+      }
+
       const scrollX = window.pageXOffset || docEl.scrollLeft || 0;
       const scrollY = window.pageYOffset || docEl.scrollTop || 0;
 
       let left = null;
       let right = null;
       if (this.props.align === 'right') {
-        const docWidth = document.documentElement.offsetWidth || 0;
+        const docWidth = docEl.offsetWidth || 0;
         right = docWidth - (targetRect.right + scrollX) + this.props.offsetX;
       } else {
         left = targetRect.left + scrollX + this.props.offsetX;
       }
 
-      const {offsetY = 0} = this.props;
+      const { offsetY = 0 } = this.props;
       let top = targetRect.bottom + scrollY + offsetY;
 
       const distanceToBottom =
-        document.documentElement.clientHeight - targetRect.bottom;
+        docEl.clientHeight - targetRect.bottom;
       if (distanceToBottom < this._getHeight()) {
         top = targetRect.top - this._getHeight() + scrollY - offsetY;
       }
@@ -123,9 +128,9 @@ export default class DropdownContainer extends React.Component {
         top,
         left,
         right,
-        minWidth: targetRect.right - targetRect.left,
+        minWidth: targetRect.right - targetRect.left
       };
-      this.setState({position});
+      this.setState({ position });
     }
   };
 

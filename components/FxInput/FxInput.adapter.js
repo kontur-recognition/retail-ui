@@ -1,6 +1,6 @@
 // @flow
 
-import {InputAdapter} from '../Input/Input.adapter';
+import { InputAdapter } from '../Input/Input.adapter';
 
 import FxInput from './FxInput.js';
 
@@ -14,14 +14,14 @@ const FxInputAdapter = {
   },
 
   restore(inst: FxInput) {
-	  if (inst.props.onRestore) {
-		  inst.props.onRestore();
-	  }
+    if (inst.props.onRestore) {
+      inst.props.onRestore();
+    }
   },
 
   setValue(inst: FxInput, value: string) {
     InputAdapter.setValue(inst._input, value);
-  },
+  }
 };
 
 FxInput.__ADAPTER__ = FxInputAdapter;

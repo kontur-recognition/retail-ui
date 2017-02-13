@@ -1,6 +1,6 @@
 import events from 'add-event-listener';
 import classNames from 'classnames';
-import React, {PropTypes} from 'react';
+import React, { PropTypes } from 'react';
 import ReactDOM from 'react-dom';
 
 import Button from '../Button';
@@ -32,7 +32,7 @@ const PASS_BUTTON_PROPS = {
 
   onMouseEnter: true,
   onMouseLeave: true,
-  onMouseOver: true,
+  onMouseOver: true
 };
 
 class Select extends React.Component {
@@ -104,14 +104,14 @@ class Select extends React.Component {
 
     onMouseLeave: PropTypes.func,
 
-    onMouseOver: PropTypes.func,
+    onMouseOver: PropTypes.func
   };
 
   static defaultProps = {
     placeholder: 'ничего не выбрано',
     renderValue,
     renderItem,
-    filterItem,
+    filterItem
   };
 
   static static(element) {
@@ -128,7 +128,7 @@ class Select extends React.Component {
 
     this.state = {
       opened: false,
-      value: props.defaultValue,
+      value: props.defaultValue
     };
 
     this._focusSubscribtion = null;
@@ -153,11 +153,11 @@ class Select extends React.Component {
       opened: this.state.opened,
       label,
       onClick: this._toggle,
-      onKeyDown: this.handleKey,
+      onKeyDown: this.handleKey
     };
 
     const style = {
-      width: this.props.width,
+      width: this.props.width
     };
     if (this.props.maxWidth) {
       style.maxWidth = this.props.maxWidth;
@@ -186,7 +186,7 @@ class Select extends React.Component {
       _noPadding: true,
       width: '100%',
       onClick: params.onClick,
-      onKeyDown: params.onKeyDown,
+      onKeyDown: params.onKeyDown
     };
     if (params.opened) {
       buttonProps.active = true;
@@ -196,7 +196,7 @@ class Select extends React.Component {
       Object.assign(buttonProps, {
         _noPadding: false,
         _noRightPadding: true,
-        icon: this.props._icon,
+        icon: this.props._icon
       });
     }
 
@@ -204,11 +204,11 @@ class Select extends React.Component {
       className: classNames({
         [styles.label]: true,
         [styles.labelWithLeftIcon]: !!this.props._icon,
-        [styles.labelIsOpened]: params.opened,
+        [styles.labelIsOpened]: params.opened
       }),
       style: {
-        paddingRight: buttonProps.size === 'large'? '41px': '38px',
-      },
+        paddingRight: buttonProps.size === 'large'? '41px': '38px'
+      }
     };
 
     return (
@@ -231,7 +231,7 @@ class Select extends React.Component {
       _buttonOpened: params.opened,
 
       onClick: params.onClick,
-      onKeyDown: params.onKeyDown,
+      onKeyDown: params.onKeyDown
     };
 
     return (
@@ -273,7 +273,7 @@ class Select extends React.Component {
             ) {
               return React.cloneElement(
                 typeof item === 'function' ? item() : item,
-                {key: i},
+                { key: i },
               );
             }
 
@@ -304,7 +304,7 @@ class Select extends React.Component {
 
     if (el) {
       this._focusSubscribtion = listenFocusOutside(
-        [ReactDOM.findDOMNode(this)], this._close
+        this._getDomNodes(), this._close
       );
 
       events.addEventListener(
@@ -328,10 +328,21 @@ class Select extends React.Component {
 
   _handleNativeDocClick = (event) => {
     const target = event.target || event.srcElement;
-    if (!ReactDOM.findDOMNode(this).contains(target)) {
-      this._close();
+    const nodes = this._getDomNodes();
+    if (nodes.some((node) => node.contains(target))) {
+      return;
     }
+    this._close();
   };
+
+  _getDomNodes() {
+    const result = [];
+    result.push(ReactDOM.findDOMNode(this));
+    if (this._menu) {
+      result.push(ReactDOM.findDOMNode(this._menu));
+    }
+    return result;
+  }
 
   _toggle = () => {
     if (this.state.opened) {
@@ -343,16 +354,16 @@ class Select extends React.Component {
 
   _open = () => {
     if (!this.state.opened) {
-      this.setState({opened: true});
+      this.setState({ opened: true });
 
-      const {onOpen} = this.props;
+      const { onOpen } = this.props;
       onOpen && onOpen();
     }
   };
 
   _close = () => {
     if (this.state.opened) {
-      this.setState({opened: false});
+      this.setState({ opened: false });
     }
 
     events.removeEventListener(window, 'popstate', this._close);
@@ -367,7 +378,7 @@ class Select extends React.Component {
       }
     } else {
       if (key === 'Escape') {
-        this.setState({opened: false}, () => {
+        this.setState({ opened: false }, () => {
           ReactDOM.findDOMNode(this).focus();
         });
       } else if (e.key === 'ArrowUp') {
@@ -384,20 +395,20 @@ class Select extends React.Component {
   };
 
   handleSearch = event => {
-    this.setState({searchPattern: event.target.value});
+    this.setState({ searchPattern: event.target.value });
   };
 
   _select(value) {
     this.setState({
       opened: false,
-      value,
+      value
     }, () => {
       setTimeout(() => {
         ReactDOM.findDOMNode(this).focus();
       }, 0);
     });
     if (this.props.onChange) {
-      this.props.onChange({target: {value}}, value);
+      this.props.onChange({ target: { value } }, value);
     }
   }
 
