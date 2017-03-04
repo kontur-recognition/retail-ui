@@ -9,8 +9,10 @@ import Select from '../Select';
 const PASS_PROPS = {
   _renderButton: true,
   error: true,
+  disablePortal: true,
   menuAlign: true,
   menuWidth: true,
+  maxMenuHeight: true,
   use: true,
   size: true,
   warning: true,
@@ -36,6 +38,11 @@ export default class Dropdown extends React.Component {
     caption: PropTypes.node.isRequired,
 
     /**
+     * Отключает использование портала
+     */
+    disablePortal: PropTypes.bool,
+
+    /**
      * Визуально показать наличие ошибки.
      */
     error: PropTypes.bool,
@@ -44,6 +51,8 @@ export default class Dropdown extends React.Component {
      * Иконка слева от текста кнопки
      */
     icon: PropTypes.string,
+
+    maxMenuHeight: PropTypes.number,
 
     menuAlign: PropTypes.oneOf(['left', 'right']),
 

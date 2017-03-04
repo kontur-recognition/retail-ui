@@ -39,6 +39,11 @@ class Select extends React.Component {
   static propTypes = {
     defaultValue: PropTypes.any,
 
+    /**
+     * Отключает использование портала
+     */
+    disablePortal: PropTypes.bool,
+
     disabled: PropTypes.bool,
 
     /**
@@ -73,6 +78,8 @@ class Select extends React.Component {
      * ```
      */
     items: PropTypes.oneOfType([PropTypes.array, PropTypes.object]),
+
+    maxMenuHeight: PropTypes.number,
 
     maxWidth: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
 
@@ -259,11 +266,13 @@ class Select extends React.Component {
         offsetY={-1}
         ref={this._refMenuContainer}
         align={this.props.menuAlign}
+        disablePortal={this.props.disablePortal}
       >
         <Menu
           ref={this._refMenu}
           width={this.props.menuWidth}
           onItemClick={this._close}
+          maxHeight={this.props.maxMenuHeight}
         >
           {search}
           {this.mapItems((iValue, item, i, comment) => {

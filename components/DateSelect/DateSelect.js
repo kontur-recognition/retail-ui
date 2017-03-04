@@ -5,10 +5,12 @@ import React, { PropTypes } from 'react';
 
 import styles from './DateSelect.less';
 
+import Icon from '../Icon/Icon.js';
+
 const MONTHS = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль',
   'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
 
-const HEIGHT = 30;
+const HEIGHT = 24;
 
 type Props = {
   maxYear: number,
@@ -81,7 +83,9 @@ export default class DateSelect extends React.Component {
       <span {...rootProps}>
         <div className={styles.caption} onClick={this.open}>
           {this.getItem(0)}
-          <div className={styles.arrow} />
+          <div className={styles.arrow}>
+            <Icon name="sort" />
+          </div>
         </div>
         {this.state.opened && this.renderMenu()}
       </span>
@@ -90,6 +94,7 @@ export default class DateSelect extends React.Component {
 
   renderMenu() {
     const { top, height } = this.state;
+    const { width, type } = this.props;
 
     let shift = this.state.pos % HEIGHT;
     if (shift < 0) {
@@ -105,14 +110,29 @@ export default class DateSelect extends React.Component {
         [styles.menuItemSelected]: i === 0
       });
       items.push(
-        <div key={i} className={className}>
+        <div
+          key={i}
+          className={className}
+          onMouseEnter={() => this.setState({ current: i })}
+          onMouseLeave={() => this.setState({ current: null })}
+          onClick={this.handleItemClick(i)}
+        >
           {this.getItem(i)}
         </div>
       );
     }
-    const style = {
-      top: top - 2
+    const style: Object = {
+      top: top - 5
     };
+    switch (type) {
+      case 'year':
+        style.width = width + 7;
+        style.left = '-10px';
+        break;
+      case 'month':
+        style.width = width + 12;
+        style.right = 0;
+    }
 
     const shiftStyle = {
       position: 'relative',
@@ -121,25 +141,29 @@ export default class DateSelect extends React.Component {
 
     const holderClass = classNames({
       [styles.menuHolder]: true,
-      [styles.isTopCapped]: this.state.topCapped
+      [styles.isTopCapped]: this.state.topCapped,
+      [styles.isBotCapped]: this.state.botCapped
     });
 
     return (
       <div className={holderClass} style={style} onKeyDown={this.handleKey}>
         {!this.state.topCapped && (
-          <div className={styles.menuUp} onMouseDown={this.handleUp} />
+          <div className={styles.menuUp} onMouseDown={this.handleUp}>
+            <span><Icon name={'caret-top'} /></span>
+          </div>
         )}
         <div className={styles.itemsHolder} style={{ height }}>
-          <div style={shiftStyle}>{items}</div>
-          <div className={styles.menuOverlay}
-            onMouseDown={this.handleItemClick}
-            onMouseMove={this.handleMouseMove}
-            onMouseLeave={this.handleMouseLeave}
+          <div
+            style={shiftStyle}
             onWheel={this.handleWheel}
-          />
+          >
+            {items}
+          </div>
         </div>
         {!this.state.botCapped && (
-          <div className={styles.menuDown} onMouseDown={this.handleDown} />
+          <div className={styles.menuDown} onMouseDown={this.handleDown}>
+            <span><Icon name={'caret-bottom'} /></span>
+          </div>
         )}
       </div>
     );
@@ -158,33 +182,14 @@ export default class DateSelect extends React.Component {
     this.resetSize(pos);
   };
 
-  handleMouseMove = (event: SyntheticMouseEvent) => {
-    const currentTarget: HTMLElement = (event.currentTarget: any);
-    const rect = currentTarget.getBoundingClientRect();
-    const y = event.clientY - rect.top + this.state.top + this.state.pos;
-    const current = Math.floor(y / HEIGHT);
-    this.setState({ current });
-  };
-
-  handleMouseLeave = () => {
-    this.setState({ current: null });
-  };
-
-  handleItemClick = (event: SyntheticMouseEvent) => {
-    if (event.button !== 0) {
-      return;
-    }
-
-    const currentTarget: HTMLElement = (event.currentTarget: any);
-    const rect = currentTarget.getBoundingClientRect();
-    const y = event.clientY - rect.top + this.state.top + this.state.pos;
-    const value = this.props.value + Math.floor(y / HEIGHT);
-
-    this.close();
-
-    if (this.props.onChange) {
-      this.props.onChange(value);
-    }
+  handleItemClick = (shift: number) => {
+    return (e: SyntheticMouseEvent) => {
+      const value = this.props.value + shift;
+      if (this.props.onChange) {
+        this.props.onChange(value);
+      }
+      this.setState({ opened: false });
+    };
   };
 
   handleKey = (event: SyntheticKeyboardEvent) => {

@@ -58,7 +58,6 @@
 
   .input:focus {
     border-color: @border-color-focus;
-    border-radius: 1px;
     box-shadow: 0 0 0 1px @border-color-focus;
     position: relative;
     z-index: 2;
@@ -78,7 +77,6 @@
 
   .warning .input {
     border-color: @border-color-warning;
-    border-radius: 1px;
     box-shadow: 0 0 0 1px @border-color-warning;
     position: relative;
     z-index: 2;
@@ -86,7 +84,6 @@
 
   .error .input {
     border-color: @border-color-error;
-    border-radius: 1px;
     box-shadow: 0 0 0 1px @border-color-error;
     position: relative;
     z-index: 2;
@@ -140,6 +137,7 @@
     color: #a9a9a9;
     cursor: text;
     line-height: 32px;
+    height: 32px;
     position: absolute;
     top: 0;
     z-index: 2;
@@ -149,6 +147,7 @@
     .leftIcon,
     .rightIcon {
       line-height: 40px;
+      height: 40px;
     }
   }
 
@@ -156,6 +155,7 @@
     .leftIcon,
     .rightIcon {
       line-height: 44px;
+      height: 44px;
     }
   }
 
@@ -174,5 +174,19 @@
 
   .borderless {
     border-color: transparent;
+  }
+
+  .searchLine {
+    font-size: 15px;
+    border-radius: 2px;
+
+    &.leftIcon {
+      font-size: 22px;
+    }
+
+    &:focus {
+      border-color: transparent;
+      box-shadow: none;
+    }
   }
 }

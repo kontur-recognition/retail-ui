@@ -11,8 +11,11 @@ describe('DatePicker', () => {
     );
 
     const input = wrapper.find('input');
+    input.simulate('focus');
     input.simulate('change', { target: { value: '4.12.13' } });
     input.simulate('blur');
+
+    expect(onChange).toHaveBeenCalledTimes(1);
 
     const value = onChange.mock.calls[0][1];
 
@@ -28,7 +31,7 @@ describe('DatePicker', () => {
     const input = wrapper.find('input');
 
     input.simulate('focus');
-    input.simulate('change', { target: { value: '123' } });
+    input.simulate('change', { target: { value: '1203' } });
     wrapper.setProps({ value: new Date('02-01-2003 UTC') });
 
     expect(input.prop('value')).toBe('01.02.2003');

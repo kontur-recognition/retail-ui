@@ -18,10 +18,13 @@ export default class RenderContainer extends React.Component {
 
     this._domContainer = document.createElement('div');
 
-    if (global.ReactTesting) {
-      this._testID = nextID();
-      this._domContainer.setAttribute('data-rendered-container-id', this._testID);
+    this._testID = nextID();
+    this._domContainer.setAttribute(
+      'data-rendered-container-id',
+      this._testID.toString()
+    );
 
+    if (global.ReactTesting) {
       global.ReactTesting.addRenderContainer(this._testID, this);
     }
   }
@@ -72,6 +75,6 @@ class Portal extends React.Component {
   }
 }
 
-function RootContainer(props: { children?: React.Element<*>}) {
+function RootContainer(props: { children?: React.Element<*> }) {
   return React.Children.only(props.children);
 }

@@ -1,14 +1,27 @@
 // @flow
-
+import events from 'add-event-listener';
 import classNames from 'classnames';
 import React, { PropTypes } from 'react';
 
 import Corners from './Corners';
 import Icon from '../Icon';
-import browser from '../../lib/browserNormalizer';
 
 import '../ensureOldIEClassName';
 import styles from './Button.less';
+
+const KEYCODE_TAB = 9;
+
+let isListening: boolean;
+let tabPressed: boolean;
+
+function listenTabPresses() {
+  if (!isListening) {
+    events.addEventListener(window, 'keydown', (event: KeyboardEvent) => {
+      tabPressed = event.keyCode === KEYCODE_TAB;
+    });
+    isListening = true;
+  }
+}
 
 const SIZE_CLASSES = {
   small: styles.sizeSmall,
@@ -17,26 +30,27 @@ const SIZE_CLASSES = {
 };
 
 type Props = {
-  _noPadding?: bool,
-  _noRightPadding?: bool,
-  active?: bool,
-  checked?: bool,
+  _noPadding?: boolean,
+  _noRightPadding?: boolean,
+  active?: boolean,
+  checked?: boolean,
   children?: any,
   corners?: number, // internal
-  disabled?: bool,
-  focused?: bool,
+  disabled?: boolean,
+  focused?: boolean,
   icon?: string,
-  loading?: bool,
-  narrow?: bool,
+  loading?: boolean,
+  narrow?: boolean,
   size: 'small' | 'medium' | 'large',
   type: 'button' | 'submit' | 'reset',
-  use: 'default' | 'primary' | 'success' | 'danger' | 'pay',
+  use: 'default' | 'primary' | 'success' | 'danger' | 'pay' | 'link',
   width?: number | string,
   onClick?: (e: SyntheticMouseEvent) => void,
   onKeyDown?: (e: SyntheticKeyboardEvent) => void,
+  arrow?: boolean,
   onMouseEnter?: (e: SyntheticMouseEvent) => void,
   onMouseLeave?: (e: SyntheticMouseEvent) => void,
-  onMouseOver?: (e: SyntheticMouseEvent) => void,
+  onMouseOver?: (e: SyntheticMouseEvent) => void
 };
 
 class Button extends React.Component {
@@ -50,6 +64,11 @@ class Button extends React.Component {
      * Визуально нажатое состояние.
      */
     active: PropTypes.bool,
+
+    /**
+     * Кнопка со стрелкой.
+     */
+    arrow: PropTypes.bool,
 
     checked: PropTypes.bool,
 
@@ -76,7 +95,8 @@ class Button extends React.Component {
       'primary',
       'success',
       'danger',
-      'pay'
+      'pay',
+      'link'
     ]),
 
     width: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
@@ -100,7 +120,32 @@ class Button extends React.Component {
   };
 
   props: Props;
-  state: null;
+  state: {
+    focusedByTab: boolean
+  } = {
+    focusedByTab: false
+  };
+
+  componentDidMount() {
+    listenTabPresses();
+  }
+
+  handleFocus = (e: SyntheticFocusEvent) => {
+    if (!this.props.disabled) {
+      // focus event fires before keyDown eventlistener
+      // so we should check tabPressed in async way
+      process.nextTick(() => {
+        if (tabPressed) {
+          this.setState({ focusedByTab: true });
+          tabPressed = false;
+        }
+      });
+    }
+  };
+
+  handleBlur = () => {
+    this.setState({ focusedByTab: false });
+  }
 
   render() {
     const { corners = 0 } = this.props;
@@ -121,7 +166,9 @@ class Button extends React.Component {
         [styles.noPadding]: this.props._noPadding,
         [styles.noRightPadding]: this.props._noRightPadding,
         [styles.buttonWithIcon]: !!this.props.icon,
-        [SIZE_CLASSES[this.props.size]]: true
+        [styles.arrowButton]: this.props.arrow,
+        [SIZE_CLASSES[this.props.size]]: true,
+        [styles.focus]: this.state.focusedByTab
       }),
       style: {
         borderRadius: `${corners & Corners.TOP_LEFT ? 0 : radius}` +
@@ -131,8 +178,9 @@ class Button extends React.Component {
       },
       disabled: this.props.disabled || this.props.loading,
       onClick: this.props.onClick,
+      onFocus: this.handleFocus,
+      onBlur: this.handleBlur,
       onKeyDown: this.props.onKeyDown,
-      onMouseDown: this._handleMouseDown, // to prevent focus on click
       onMouseEnter: this.props.onMouseEnter,
       onMouseLeave: this.props.onMouseLeave,
       onMouseOver: this.props.onMouseOver
@@ -141,9 +189,12 @@ class Button extends React.Component {
       rootProps.style.textAlign = this.props.align;
     }
 
-    const wrapStyle = {};
+    const wrapProps = {
+      className: this.props.arrow ? styles.wrap_arrow : styles.wrap,
+      style: {}
+    };
     if (this.props.width) {
-      wrapStyle.width = this.props.width;
+      wrapProps.style.width = this.props.width;
     }
 
     let error = null;
@@ -167,10 +218,43 @@ class Button extends React.Component {
       );
     }
 
+    let arrow = null;
+    if (this.props.arrow) {
+      arrow = (
+        <div
+          className={classNames(
+            styles.arrow,
+            this.props.loading ? styles.arrow_loading : '',
+            this.props.error ? styles.arrow_error : '',
+            this.props.warning ? styles.arrow_warning : ''
+          )}
+        />
+      );
+    }
+
+    // Force disable all props and features, that cannot be use with Link
+    if (this.props.use === 'link'){
+      rootProps.className = classNames({
+        [styles.root]: true,
+        [styles['use-link']]: true,
+        [styles.disabled]: this.props.disabled,
+        [styles.buttonWithIcon]: !!this.props.icon
+      });
+      Object.assign(wrapProps, {
+        className: styles.wrap,
+        style: null
+      });
+      rootProps.style.textAlign = null;
+      error = null;
+      loading = null;
+      arrow = null;
+    }
+
     return (
-      <span className={styles.wrap} style={wrapStyle}>
+      <span {...wrapProps}>
         <button {...rootProps}>
           {loading}
+          {arrow}
           <div className={styles.caption}>
             {icon}
             {this.props.children}
@@ -179,13 +263,6 @@ class Button extends React.Component {
         </button>
       </span>
     );
-  }
-
-  _handleMouseDown(e) {
-    if (browser.hasFocusOnButtonClick && document.activeElement) {
-      document.activeElement.blur();
-      e.preventDefault();
-    }
   }
 }
 
