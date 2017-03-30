@@ -48,12 +48,14 @@ export default class InputLikeText extends React.Component {
 
     return (
       <span tabIndex="0" className={className} {...passProps}>
-        {this.props.children}
+        <span className={styles.inner}>
+          {this.props.children}
+        </span>
       </span>
     );
   }
 
   focus() {
-    ReactDOM.findDOMNode(this).focus();
+    (ReactDOM.findDOMNode(this): any).focus();
   }
 }

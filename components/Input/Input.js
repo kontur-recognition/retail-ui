@@ -7,22 +7,9 @@ import ReactDOM from 'react-dom';
 import invariant from 'invariant';
 
 import filterProps from '../filterProps';
-
+import polyfillPlaceholder from '../polyfillPlaceholder';
 import '../ensureOldIEClassName';
 import styles from './Input.less';
-
-let polyfillPlaceholder = false;
-if (typeof window !== 'undefined' && window.document
-    && window.document.createElement) {
-
-  const sAgent = window.navigator.userAgent;
-
-  if (!('placeholder' in document.createElement('input'))
-      || !!navigator.userAgent.match(/Trident\/7\./)
-      || sAgent.indexOf('MSIE') > 0) {
-    polyfillPlaceholder = true;
-  }
-}
 
 const INPUT_PASS_PROPS = {
   autoFocus: true,
@@ -309,9 +296,16 @@ export default class Input extends React.Component {
     }
   }
 
+  componentWillReceiveProps(nextProps: Props) {
+    if (polyfillPlaceholder && !nextProps.value) {
+      this.setState({ polyfillPlaceholder: true });
+    }
+  }
+
   getInputFromRef = (ref: any) => {
+    const elem: Element = (ReactDOM.findDOMNode(this): any);
     this.input = this.props.mask
-      ? ReactDOM.findDOMNode(this).querySelector('input')
+      ? elem.querySelector('input')
       : ref;
   };
 
@@ -344,7 +338,7 @@ export default class Input extends React.Component {
       // $FlowIssue: suppressing the error of possibly null value of this.input
       this.input.setSelectionRange(start, end);
     } else if (this.input.createTextRange) {
-      const range = this.input.createTextRange();
+      const range = (this.input: any).createTextRange();
       range.collapse(true);
       range.moveEnd('character', end);
       range.moveStart('character', start);
