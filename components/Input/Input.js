@@ -2,7 +2,8 @@
 
 import classNames from 'classnames';
 import MaskedInput from 'react-input-mask';
-import React, { PropTypes } from 'react';
+import * as React from 'react';
+import PropTypes from 'prop-types';
 import ReactDOM from 'react-dom';
 import invariant from 'invariant';
 
@@ -38,44 +39,44 @@ const SIZE_CLASS_NAMES = {
 
 export type Props = {
   align?: 'left' | 'center' | 'right',
-  alwaysShowMask?: bool,
-  borderless?: bool,
+  alwaysShowMask?: boolean,
+  borderless?: boolean,
   className?: string, // TODO: kill it
-  disabled?: bool,
-  error?: bool,
+  disabled?: boolean,
+  error?: boolean,
   id?: string,
-  leftIcon?: React.Element<mixed>,
+  leftIcon?: React.Node,
   mask?: string,
-  maskChar?: string,
+  maskChar?: ?string,
   maxLength?: number | string,
   placeholder?: string,
-  rightIcon?: React.Element<mixed>,
-  size: 'small' | 'medium' | 'large',
+  rightIcon?: React.Node,
+  size?: 'small' | 'medium' | 'large',
   title?: string,
   type?: 'password' | 'text',
-  value: string,
-  warning?: bool,
+  value?: string,
+  warning?: boolean,
   width?: number | string,
-  onBlur?: (e: SyntheticFocusEvent) => void,
-  onChange?: (e: {target: {value: string}}, v: string) => void,
-  onCopy?: (e: SyntheticClipboardEvent) => void,
-  onCut?: (e: SyntheticClipboardEvent) => void,
-  onFocus?: (e: SyntheticFocusEvent) => void,
-  onInput?: (e: SyntheticInputEvent) => void,
-  onKeyDown?: (e: SyntheticKeyboardEvent) => void,
-  onKeyPress?: (e: SyntheticKeyboardEvent) => void,
-  onKeyUp?: (e: SyntheticKeyboardEvent) => void,
-  onPaste?: (e: SyntheticFocusEvent) => void,
-  onMouseEnter?: (e: SyntheticMouseEvent) => void,
-  onMouseLeave?: (e: SyntheticMouseEvent) => void,
-  onMouseOver?: (e: SyntheticMouseEvent) => void,
+  onBlur?: (e: Event) => void,
+  onChange?: (e: SyntheticInputEvent<HTMLInputElement>, v: string) => void,
+  onCopy?: (e: SyntheticClipboardEvent<>) => void,
+  onCut?: (e: SyntheticClipboardEvent<>) => void,
+  onFocus?: (e: SyntheticFocusEvent<>) => void,
+  onInput?: (e: SyntheticInputEvent<>) => void,
+  onKeyDown?: (e: SyntheticKeyboardEvent<>) => void,
+  onKeyPress?: (e: SyntheticKeyboardEvent<>) => void,
+  onKeyUp?: (e: SyntheticKeyboardEvent<>) => void,
+  onPaste?: (e: SyntheticFocusEvent<>) => void,
+  onMouseEnter?: (e: SyntheticMouseEvent<>) => void,
+  onMouseLeave?: (e: SyntheticMouseEvent<>) => void,
+  onMouseOver?: (e: SyntheticMouseEvent<>) => void
 };
 
 type State = {
-  polyfillPlaceholder: bool,
+  polyfillPlaceholder: boolean
 };
 
-export default class Input extends React.Component {
+export default class Input extends React.Component<Props, State> {
   static propTypes = {
     align: PropTypes.oneOf(['left', 'center', 'right']),
 
@@ -181,19 +182,18 @@ export default class Input extends React.Component {
 
   static defaultProps = {
     size: 'small'
-  }
+  };
 
-  props: Props;
   state: State = {
     polyfillPlaceholder: false
   };
 
-  input = null;
+  input: ?HTMLInputElement = null;
 
   render() {
     const className: string = this.props.className || '';
-    const sizeClassName = SIZE_CLASS_NAMES[this.props.size] ||
-                          SIZE_CLASS_NAMES[Input.defaultProps.size];
+    const sizeClassName =
+      SIZE_CLASS_NAMES[this.props.size || Input.defaultProps.size];
     var labelProps = {
       className: classNames({
         [styles.root]: true,
@@ -216,8 +216,12 @@ export default class Input extends React.Component {
 
     var placeholder = null;
 
-    if (this.state.polyfillPlaceholder && this.props.placeholder
-        && !this.props.mask && !this.props.value) {
+    if (
+      this.state.polyfillPlaceholder &&
+      this.props.placeholder &&
+      !this.props.mask &&
+      !this.props.value
+    ) {
       placeholder = (
         <div
           className={styles.placeholder}
@@ -230,12 +234,18 @@ export default class Input extends React.Component {
 
     var leftIcon = null;
     if (this.props.leftIcon) {
-      leftIcon = <div className={styles.leftIcon}>{this.props.leftIcon}</div>;
+      leftIcon = (
+        <div className={styles.leftIcon}>
+          {this.props.leftIcon}
+        </div>
+      );
     }
     var rightIcon = null;
     if (this.props.rightIcon) {
       rightIcon = (
-        <div className={styles.rightIcon}>{this.props.rightIcon}</div>
+        <div className={styles.rightIcon}>
+          {this.props.rightIcon}
+        </div>
       );
     }
 
@@ -246,7 +256,7 @@ export default class Input extends React.Component {
         [styles.borderless]: this.props.borderless
       }),
       value: this.props.value,
-      onChange: (e) => this._handleChange(e),
+      onChange: e => this._handleChange(e),
       style: {},
       ref: this.getInputFromRef
     };
@@ -273,11 +283,7 @@ export default class Input extends React.Component {
         />
       );
     } else {
-      input = (
-        <input
-          {...inputProps}
-        />
-      );
+      input = <input {...inputProps} />;
     }
 
     return (
@@ -302,11 +308,11 @@ export default class Input extends React.Component {
     }
   }
 
-  getInputFromRef = (ref: any) => {
-    const elem: Element = (ReactDOM.findDOMNode(this): any);
-    this.input = this.props.mask
-      ? elem.querySelector('input')
-      : ref;
+  getInputFromRef = (ref: HTMLInputElement | MaskedInput) => {
+    // $FlowIssue
+    const elem: HTMLInputElement = ReactDOM.findDOMNode(this);
+    // $FlowIssue should return HTMLInputElement
+    this.input = this.props.mask ? elem.querySelector('input') : ref;
   };
 
   /**
@@ -338,7 +344,7 @@ export default class Input extends React.Component {
       // $FlowIssue: suppressing the error of possibly null value of this.input
       this.input.setSelectionRange(start, end);
     } else if (this.input.createTextRange) {
-      const range = (this.input: any).createTextRange();
+      const range = this.input.createTextRange();
       range.collapse(true);
       range.moveEnd('character', end);
       range.moveStart('character', start);

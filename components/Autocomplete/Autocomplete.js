@@ -1,23 +1,58 @@
 // @flow
 
 import classNames from 'classnames';
-import React, { PropTypes } from 'react';
+import * as React from 'react';
+import PropTypes from 'prop-types';
 import { findDOMNode } from 'react-dom';
 
 import Input from '../Input';
-import type { Props as InputProps } from '../Input/Input';
 import DropdownContainer from '../DropdownContainer/DropdownContainer';
+import RenderLayer from '../RenderLayer';
 
 import styles from './Autocomplete.less';
 
+type InputProps = {
+  align?: 'left' | 'center' | 'right',
+  alwaysShowMask?: boolean,
+  borderless?: boolean,
+  disabled?: boolean,
+  error?: boolean,
+  id?: string,
+  leftIcon?: React.Element<React.ComponentType<mixed>>,
+  mask?: string,
+  maskChar?: string,
+  maxLength?: number | string,
+  placeholder?: string,
+  rightIcon?: React.Element<React.ComponentType<mixed>>,
+  size?: 'small' | 'medium' | 'large',
+  title?: string,
+  type?: 'password' | 'text',
+  value?: string,
+  warning?: boolean,
+  width?: number | string,
+  onBlur?: (e: Event) => void,
+  onCopy?: (e: SyntheticClipboardEvent<>) => void,
+  onCut?: (e: SyntheticClipboardEvent<>) => void,
+  onFocus?: (e: SyntheticFocusEvent<>) => void,
+  onInput?: (e: SyntheticInputEvent<>) => void,
+  onKeyDown?: (e: SyntheticKeyboardEvent<>) => void,
+  onKeyPress?: (e: SyntheticKeyboardEvent<>) => void,
+  onKeyUp?: (e: SyntheticKeyboardEvent<>) => void,
+  onPaste?: (e: SyntheticFocusEvent<>) => void,
+  onMouseEnter?: (e: SyntheticMouseEvent<>) => void,
+  onMouseLeave?: (e: SyntheticMouseEvent<>) => void,
+  onMouseOver?: (e: SyntheticMouseEvent<>) => void
+};
+
 type Props = InputProps & {
-  renderItem: any,
-  source: any,
+  renderItem: (item: string) => React.Node,
+  source: Array<string> | ((patter: string) => Promise<string[]>),
+  onChange?: (event: { target: { value: string } }, value: string) => void
 };
 
 type State = {
-  items: ?Array<any>,
-  selected: number,
+  items: ?Array<string>,
+  selected: number
 };
 
 /**
@@ -25,7 +60,7 @@ type State = {
  *
  * Все свойства передаются во внутренний *Input*.
  */
-export default class Autocomplete extends React.Component {
+export default class Autocomplete extends React.Component<Props, State> {
   static propTypes = {
     /**
      * Функция для отрисовки элемента в выпадающем списке. Единственный аргумент
@@ -46,10 +81,7 @@ export default class Autocomplete extends React.Component {
      * }
      * ```
      */
-    source: PropTypes.oneOfType([
-      PropTypes.array,
-      PropTypes.func
-    ])
+    source: PropTypes.oneOfType([PropTypes.array, PropTypes.func])
   };
 
   static defaultProps = {
@@ -57,33 +89,46 @@ export default class Autocomplete extends React.Component {
     size: 'small'
   };
 
-  props: Props;
   state: State = {
     items: null,
     selected: -1
   };
-  _opened: bool = false;
-  _input: Input = null;
+  _opened: boolean = false;
+  _input: ?Input = null;
+
+  /**
+   * @api
+   */
+  focus() {
+    if (this._input) {
+      this._input.focus();
+    }
+  }
 
   render() {
-    var inputProps = {
-      onChange: this.handleChange,
-      onBlur: this.handleBlur,
-      onKeyDown: this.handleKey,
+    const inputProps = {
+      onChange: this._handleChange,
+      onKeyDown: this._handleKey,
       onMouseEnter: this.props.onMouseEnter,
       onMouseLeave: this.props.onMouseLeave,
       onMouseOver: this.props.onMouseOver,
-      ref: this._refInput,
+      ref: this._refInput
     };
     return (
-      <span className={styles.root}>
-        <Input {...this.props} {...inputProps} />
-        {this.renderMenu()}
-      </span>
+      <RenderLayer
+        onFocusOutside={this._handleBlur}
+        onClickOutside={this._handleBlur}
+      >
+        <span className={styles.root}>
+          {/* $FlowIssue inputProps overrides */}
+          <Input {...this.props} {...inputProps} />
+          {this._renderMenu()}
+        </span>
+      </RenderLayer>
     );
   }
 
-  renderMenu() {
+  _renderMenu() {
     var items = this.state.items;
     if (!items || items.length === 0) {
       return null;
@@ -99,10 +144,12 @@ export default class Autocomplete extends React.Component {
               [styles.itemPadLeft]: this.props.leftIcon
             });
             return (
-              <div key={i} className={rootClass}
-                onMouseDown={(e) => this.handleItemClick(e, i)}
-                onMouseEnter={(e) => this.setState({ selected: i })}
-                onMouseLeave={(e) => this.setState({ selected: -1 })}
+              <div
+                key={i}
+                className={rootClass}
+                onClick={e => this._handleItemClick(e, i)}
+                onMouseEnter={e => this.setState({ selected: i })}
+                onMouseLeave={e => this.setState({ selected: -1 })}
               >
                 {this.props.renderItem(item)}
               </div>
@@ -113,21 +160,23 @@ export default class Autocomplete extends React.Component {
     );
   }
 
-  componentWillReceiveProps(props: Props) {
-    this.updateItems(props.value);
+  componentWillReceiveProps(nextProps: Props) {
+    if (nextProps.value && this.props.value !== nextProps.value) {
+      this._updateItems(nextProps.value);
+    }
   }
 
-  handleChange = (event: any) => {
+  _handleChange = (event: SyntheticInputEvent<HTMLInputElement>) => {
     this._opened = true;
 
     const value: string = event.target.value;
 
-    this.updateItems(value);
+    this._updateItems(value);
 
     this._fireChange(value);
   };
 
-  handleBlur = (event: SyntheticFocusEvent) => {
+  _handleBlur = (event: Event) => {
     this._opened = false;
     this.setState({ items: null });
 
@@ -136,7 +185,7 @@ export default class Autocomplete extends React.Component {
     }
   };
 
-  handleKey = (event: SyntheticKeyboardEvent) => {
+  _handleKey = (event: SyntheticKeyboardEvent<>) => {
     var items = this.state.items;
     var stop = false;
     if ((event.key === 'ArrowUp' || event.key === 'ArrowDown') && items) {
@@ -174,7 +223,7 @@ export default class Autocomplete extends React.Component {
     }
   };
 
-  handleItemClick(event: SyntheticMouseEvent, index: number) {
+  _handleItemClick(event: SyntheticMouseEvent<>, index: number) {
     if (event.button !== 0) {
       return;
     }
@@ -199,7 +248,7 @@ export default class Autocomplete extends React.Component {
     this._fireChange(value);
   }
 
-  updateItems(value: string) {
+  _updateItems(value) {
     if (!this._opened) {
       return;
     }
@@ -212,7 +261,7 @@ export default class Autocomplete extends React.Component {
     } else {
       promise = match(pattern, source);
     }
-    promise.then((items) => {
+    promise.then(items => {
       if (this.props.value === value && this._opened) {
         this.setState({
           items,
@@ -222,31 +271,25 @@ export default class Autocomplete extends React.Component {
     });
   }
 
-  _fireChange(value: string) {
+  _fireChange(value) {
     if (this.props.onChange) {
       this.props.onChange({ target: { value } }, value);
     }
   }
 
-  focus() {
-    if (this._input) {
-      this._input.focus();
-    }
-  }
-
-  _refInput = (el) => {
+  _refInput = el => {
     this._input = el;
   };
 }
 
 function match(pattern, items) {
   if (!pattern || !items) {
-    return Promise.resolve(null);
+    return Promise.resolve([]);
   }
 
   pattern = pattern.toLowerCase();
-  const filteredItems = items.filter(
-    item => item.toLowerCase().includes(pattern)
+  const filteredItems = items.filter(item =>
+    item.toLowerCase().includes(pattern)
   );
   return Promise.resolve(filteredItems);
 }

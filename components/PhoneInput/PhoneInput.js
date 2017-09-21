@@ -1,12 +1,11 @@
-import React from 'react';
+// @flow
+import * as React from 'react';
 import Input from '../Input';
-
 
 /**
  * Все пропсы пробрасываются во внутренний Input
  */
-class PhoneInput extends React.Component {
-
+class PhoneInput extends React.Component<*> {
   render() {
     return (
       <Input

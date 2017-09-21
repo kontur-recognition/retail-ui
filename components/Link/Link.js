@@ -1,7 +1,9 @@
 // @flow
 import events from 'add-event-listener';
 import classNames from 'classnames';
-import React, { PropTypes } from 'react';
+import * as React from 'react';
+
+import PropTypes from 'prop-types';
 
 import Icon from '../Icon';
 
@@ -28,13 +30,23 @@ function listenTabPresses() {
   }
 }
 
+type Props = {
+  disabled?: boolean,
+  href?: string,
+  icon?: string,
+  onClick?: (SyntheticMouseEvent<HTMLLinkElement>) => void,
+  use?: 'default' | 'success' | 'danger' | 'grayed',
+  children?: React.Node,
+  _button?: boolean,
+  _buttonOpened?: boolean,
+  tabIndex?: number
+};
 
 /**
- * Стандартная ссылка.
- *
+ * Стандартная ссылка.  
  * Все свойства передаются в элемент *<a>*.
  */
-class Link extends React.Component {
+class Link extends React.Component<Props, { focusedByTab: boolean }> {
   static propTypes = {
     disabled: PropTypes.bool,
 
@@ -54,7 +66,7 @@ class Link extends React.Component {
     focusedByTab: boolean
   } = {
     focusedByTab: false
-  }
+  };
 
   componentDidMount() {
     listenTabPresses();
@@ -73,7 +85,11 @@ class Link extends React.Component {
 
     let icon = null;
     if (iconName) {
-      icon = <span className={styles.icon}><Icon name={iconName} /></span>;
+      icon = (
+        <span className={styles.icon}>
+          <Icon name={iconName} />
+        </span>
+      );
     }
 
     let arrow = null;
@@ -81,22 +97,25 @@ class Link extends React.Component {
       arrow = <span className={styles.arrow} />;
     }
 
-    const props: Object = {
-      className: classNames({
-        [styles.root]: true,
-        [useClasses[use]]: true,
-        [styles.disabled]: disabled,
-        [styles.button]: _button,
-        [styles.buttonOpened]: _buttonOpened,
-        [styles.focus]: !disabled && this.state.focusedByTab
-      }),
+    const props = {
+      className: classNames(
+        {
+          [styles.root]: true,
+          [styles.disabled]: disabled,
+          [styles.button]: _button,
+          [styles.buttonOpened]: _buttonOpened,
+          [styles.focus]: !disabled && this.state.focusedByTab
+        },
+        use && useClasses[use]
+      ),
       href,
       onClick: this._handleClick,
       onFocus: this._handleFocus,
-      onBlur: this._handleBlur
+      onBlur: this._handleBlur,
+      tabIndex: this.props.tabIndex
     };
     if (disabled) {
-      props.tabIndex = '-1';
+      props.tabIndex = -1;
     }
 
     return (
@@ -108,7 +127,7 @@ class Link extends React.Component {
     );
   }
 
-  _handleFocus = (e: SyntheticFocusEvent) => {
+  _handleFocus = (e: SyntheticFocusEvent<>) => {
     if (!this.props.disabled) {
       // focus event fires before keyDown eventlistener
       // so we should check tabPressed in async way
@@ -123,11 +142,11 @@ class Link extends React.Component {
 
   _handleBlur = () => {
     this.setState({ focusedByTab: false });
-  }
+  };
 
   _handleClick = event => {
     if (this.props.onClick && !this.props.disabled) {
-      this.props.onClick.call(null, event);
+      this.props.onClick(event);
     }
   };
 }

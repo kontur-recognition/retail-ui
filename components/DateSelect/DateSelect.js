@@ -1,39 +1,53 @@
 // @flow
 
 import classNames from 'classnames';
-import React, { PropTypes } from 'react';
+import * as React from 'react';
+
+import PropTypes from 'prop-types';
 
 import styles from './DateSelect.less';
 
 import Icon from '../Icon/Icon.js';
 
-const MONTHS = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль',
-  'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
+const MONTHS = [
+  'Январь',
+  'Февраль',
+  'Март',
+  'Апрель',
+  'Май',
+  'Июнь',
+  'Июль',
+  'Август',
+  'Сентябрь',
+  'Октябрь',
+  'Ноябрь',
+  'Декабрь'
+];
 
 const HEIGHT = 24;
 
 type Props = {
   maxYear: number,
   minYear: number,
+  onChange: (value: number) => void,
   type: 'month' | 'year',
   value: number,
-  width: number | string,
-  onChange: (value: number) => void,
+  width: number | string
 };
 
 type State = {
-  botCapped: bool,
+  botCapped: boolean,
   current: ?number,
   height: number,
-  opened: bool,
+  opened: boolean,
   pos: number,
   top: number,
-  topCapped: bool,
+  topCapped: boolean
 };
 
 const isIE8 = ~window.navigator.userAgent.indexOf('MSIE 8.0');
 
-export default class DateSelect extends React.Component {
+export default class DateSelect extends React.Component<Props, State> {
   static propTypes = {
     maxYear: PropTypes.number,
 
@@ -54,9 +68,6 @@ export default class DateSelect extends React.Component {
     maxYear: 2100,
     width: 'auto'
   };
-
-  props: Props;
-  state: State;
 
   constructor(props: Props, context: mixed) {
     super(props, context);
@@ -111,12 +122,14 @@ export default class DateSelect extends React.Component {
         [styles.menuItemActive]: i === this.state.current,
         [styles.menuItemSelected]: i === 0
       });
-      const clickHandler = isIE8 ? {
-        onMouseDown: this.handleItemClick(i)
-      } : {
-        onMouseDown: e => e.preventDefault(),
-        onClick: this.handleItemClick(i)
-      };
+      const clickHandler = isIE8
+        ? {
+            onMouseDown: this.handleItemClick(i)
+          }
+        : {
+            onMouseDown: e => e.preventDefault(),
+            onClick: this.handleItemClick(i)
+          };
       items.push(
         <div
           key={i}
@@ -129,16 +142,21 @@ export default class DateSelect extends React.Component {
         </div>
       );
     }
-    const style: Object = {
+    const style: {
+      left?: number | string,
+      right?: number | string,
+      top: number,
+      width?: number | string
+    } = {
       top: top - 5
     };
     switch (type) {
       case 'year':
-        style.width = width + 7;
+        style.width = width;
         style.left = '-10px';
         break;
       case 'month':
-        style.width = width + 12;
+        style.width = width;
         style.right = 0;
     }
 
@@ -155,29 +173,28 @@ export default class DateSelect extends React.Component {
 
     return (
       <div className={holderClass} style={style} onKeyDown={this.handleKey}>
-        {!this.state.topCapped && (
+        {!this.state.topCapped &&
           <div className={styles.menuUp} onMouseDown={this.handleUp}>
-            <span><Icon name={'caret-top'} /></span>
-          </div>
-        )}
+            <span>
+              <Icon name={'caret-top'} />
+            </span>
+          </div>}
         <div className={styles.itemsHolder} style={{ height }}>
-          <div
-            style={shiftStyle}
-            onWheel={this.handleWheel}
-          >
+          <div style={shiftStyle} onWheel={this.handleWheel}>
             {items}
           </div>
         </div>
-        {!this.state.botCapped && (
+        {!this.state.botCapped &&
           <div className={styles.menuDown} onMouseDown={this.handleDown}>
-            <span><Icon name={'caret-bottom'} /></span>
-          </div>
-        )}
+            <span>
+              <Icon name={'caret-bottom'} />
+            </span>
+          </div>}
       </div>
     );
   }
 
-  handleWheel = (event: SyntheticWheelEvent) => {
+  handleWheel = (event: SyntheticWheelEvent<>) => {
     event.preventDefault();
 
     let deltaY = event.deltaY;
@@ -186,12 +203,12 @@ export default class DateSelect extends React.Component {
     } else if (event.deltaMode === 2) {
       deltaY *= HEIGHT * 4;
     }
-    const pos = this.state.pos += deltaY;
+    const pos = (this.state.pos += deltaY);
     this.resetSize(pos);
   };
 
   handleItemClick = (shift: number) => {
-    return (e: SyntheticMouseEvent) => {
+    return (e: SyntheticMouseEvent<>) => {
       const value = this.props.value + shift;
       if (this.props.onChange) {
         this.props.onChange(value);
@@ -200,7 +217,7 @@ export default class DateSelect extends React.Component {
     };
   };
 
-  handleKey = (event: SyntheticKeyboardEvent) => {
+  handleKey = (event: SyntheticKeyboardEvent<>) => {
     if (this.state.opened) {
       switch (event.key) {
         case 'Enter':

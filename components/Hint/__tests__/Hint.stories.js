@@ -1,24 +1,29 @@
 // @flow
-import React from 'react';
-import { storiesOf } from '@kadira/storybook';
+/* eslint-disable react/no-multi-comp */
+import * as React from 'react';
+import { storiesOf } from '@storybook/react';
+import { withKnobs, select, text } from '@storybook/addon-knobs';
 
-// import Hint from '../../components/Hint';
+import Hint from '../Hint';
 import HintBox from '../HintBox';
+import Gapped from '../../Gapped';
 
-class Hint extends React.Component {
-  props: {
-    text: string,
-    pos?: 'top' | 'right' | 'bottom' | 'left',
-    children?: any
-  };
+type Props = {
+  children?: React.Node,
+  pos: 'top' | 'right' | 'bottom' | 'left',
+  text: string
+};
 
+type State = {
+  dom: ?HTMLElement
+};
+
+class HintBoxComponent extends React.Component<Props, State> {
   static defaultProps = {
     pos: 'top'
   };
 
-  state: {
-    dom: ?HTMLElement
-  } = {
+  state = {
     dom: null
   };
 
@@ -45,37 +50,46 @@ class Hint extends React.Component {
   }
 }
 
+const getKnobs = () => ({
+  text: text('text', 'Hello!'),
+  pos: select('position', ['top', 'right', 'bottom', 'left'], 'top'),
+  maxWidth: text('max-width', '200')
+});
+
 storiesOf('Hint', module)
-  .addDecorator(story => (
+  .addDecorator(story =>
     <div style={{ padding: '100px 300px' }}>
       {story()}
     </div>
-  ))
-  .add('default', () => (
-    <Hint text="Something will never be changed">
-      <span className="hint-content">
-        Ich Liebe dich
-      </span>
-    </Hint>
-  ))
-  .add('left', () => (
-    <Hint pos="left" text="Something will never be changed">
-      <span className="hint-content">
-        Je t'aime
-      </span>
-    </Hint>
-  ))
-  .add('right', () => (
-    <Hint pos="right" text="Something will never be changed">
-      <span className="hint-content">
-        Ti voglio bene
-      </span>
-    </Hint>
-  ))
-  .add('bottom', () => (
-    <Hint pos="bottom" text="Something will never be changed">
-      <span className="hint-content">
-        Te amo
-      </span>
-    </Hint>
-  ));
+  )
+  .addDecorator(withKnobs)
+  .add('playground', () => <Hint {...getKnobs()}>Plain hint with knobs</Hint>)
+  .add('too much hints', () =>
+    <Gapped gap={5}>
+      {[...Array(252)].map((el, i) =>
+        <Hint text="test" key={i}>
+          Hover me!
+        </Hint>
+      )}
+    </Gapped>
+  )
+  .add('default', () =>
+    <HintBoxComponent text="Something will never be changed">
+      <span className="hint-content">Ich Liebe dich</span>
+    </HintBoxComponent>
+  )
+  .add('left', () =>
+    <HintBoxComponent pos="left" text="Something will never be changed">
+      <span className="hint-content">Je t'aime</span>
+    </HintBoxComponent>
+  )
+  .add('right', () =>
+    <HintBoxComponent pos="right" text="Something will never be changed">
+      <span className="hint-content">Ti voglio bene</span>
+    </HintBoxComponent>
+  )
+  .add('bottom', () =>
+    <HintBoxComponent pos="bottom" text="Something will never be changed">
+      <span className="hint-content">Te amo</span>
+    </HintBoxComponent>
+  );

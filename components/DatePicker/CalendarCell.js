@@ -61,7 +61,7 @@ export default class CalendarCell extends Component {
     return isSameDate(date, this._today);
   }
 
-  pick = (event: SyntheticMouseEvent) => {
+  pick = event => {
     if (event.button !== 0) {
       return;
     }
@@ -69,14 +69,17 @@ export default class CalendarCell extends Component {
     if (this.props.onPick) {
       this.props.onPick(this.props.date);
     }
-  }
+  };
 }
 
 function isSameDate(a, b) {
-  return a && b &&
+  return (
+    a &&
+    b &&
     a.getUTCFullYear() === b.getUTCFullYear() &&
     a.getUTCMonth() === b.getUTCMonth() &&
-    a.getUTCDate() === b.getUTCDate();
+    a.getUTCDate() === b.getUTCDate()
+  );
 }
 
 function getDay(date) {

@@ -1,6 +1,6 @@
 // @flow
-import React from 'react';
-import { storiesOf } from '@kadira/storybook';
+import * as React from 'react';
+import { storiesOf } from '@storybook/react';
 
 import ScrollContainer from '../ScrollContainer';
 
@@ -18,13 +18,16 @@ const wrapperStyle = {
   border: '1px solid #000'
 };
 
-storiesOf('ScrollContainer', module)
-  .add('with large content height', () => {
-    return (
-      <div style={wrapperStyle}>
-        <ScrollContainer>
-          {items(1000).map(i => <div key={i}>{i}</div>)}
-        </ScrollContainer>
-      </div>
-    );
-  });
+storiesOf('ScrollContainer', module).add('with large content height', () => {
+  return (
+    <div style={wrapperStyle}>
+      <ScrollContainer>
+        {items(1000).map(i =>
+          <div key={i}>
+            {i}
+          </div>
+        )}
+      </ScrollContainer>
+    </div>
+  );
+});

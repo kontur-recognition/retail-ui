@@ -1,35 +1,45 @@
 // @flow
-
-import React, { PropTypes } from 'react';
+/* eslint-disable flowtype/no-weak-types */
+import * as React from 'react';
+import PropTypes from 'prop-types';
 import ReactDOM from 'react-dom';
 import RenderLayer from '../RenderLayer';
 
 import Box from './Box';
 import RenderContainer from '../RenderContainer';
 
-type Pos = 'top left' | 'top center' | 'top right'
-  | 'bottom left' | 'bottom center' | 'bottom right'
-  | 'left top' | 'left middle' | 'left bottom'
-  | 'right top' | 'right middle' | 'right bottom';
+type Pos =
+  | 'top left'
+  | 'top center'
+  | 'top right'
+  | 'bottom left'
+  | 'bottom center'
+  | 'bottom right'
+  | 'left top'
+  | 'left middle'
+  | 'left bottom'
+  | 'right top'
+  | 'right middle'
+  | 'right bottom';
 
 type Props = {
-  children?: React.Element<any>,
+  children?: React.Element<*> | string,
 
   className?: string,
 
-  closeButton?: bool,
+  closeButton?: boolean,
 
-  render: () => ?React.Element<any>,
+  render: () => ?React.Node,
 
   pos: Pos,
 
   trigger: 'hover' | 'click' | 'focus' | 'opened' | 'closed',
 
-  onCloseClick?: () => void,
+  onCloseClick?: () => void
 };
 
 type State = {
-  opened: bool,
+  opened: boolean
 };
 
 /**
@@ -59,7 +69,7 @@ type State = {
  * }
  * ```
  */
-export default class Tooltip extends React.Component {
+export default class Tooltip extends React.Component<Props, State> {
   static propTypes = {
     /**
      * Показывать крестик для закрытия тултипа. По-умолчанию крестик
@@ -68,10 +78,18 @@ export default class Tooltip extends React.Component {
     closeButton: PropTypes.bool,
 
     pos: PropTypes.oneOf([
-      'top left', 'top center', 'top right',
-      'bottom left', 'bottom center', 'bottom right',
-      'left top', 'left middle', 'left bottom',
-      'right top', 'right middle', 'right bottom'
+      'top left',
+      'top center',
+      'top right',
+      'bottom left',
+      'bottom center',
+      'bottom right',
+      'left top',
+      'left middle',
+      'left bottom',
+      'right top',
+      'right middle',
+      'right bottom'
     ]),
 
     /**
@@ -91,16 +109,13 @@ export default class Tooltip extends React.Component {
     trigger: 'hover'
   };
 
-  props: Props;
-  state: State;
-
   _hotspotDOM: ?HTMLElement;
   _boxDOM: ?HTMLElement;
-  _lastOnFocus: ((event: any) => void) | null;
-  _lastOnBlur: ((event: any) => void) | null;
+  _lastOnFocus: ((event: SyntheticFocusEvent<>) => void) | null;
+  _lastOnBlur: ((event: SyntheticEvent<>) => void) | null;
 
   _childRef: ((el: ?React.Element<any>) => void) | string | null = null;
-  _cachedRef: ?((el: any, childRef: any) => void);
+  _cachedRef: ?(el: any, childRef: any) => void;
 
   constructor(props: Props, context: any) {
     super(props, context);
@@ -137,7 +152,9 @@ export default class Tooltip extends React.Component {
     this._lastOnBlur = null;
     if (typeof child === 'string') {
       child = (
-        <span ref={this._getHotspotRef(null)} {...childProps}>{child}</span>
+        <span ref={this._getHotspotRef(null)} {...childProps}>
+          {child}
+        </span>
       );
     } else {
       const onlyChild = React.Children.only(child);
@@ -173,18 +190,13 @@ export default class Tooltip extends React.Component {
       return null;
     }
 
-    const trigger = this.props.trigger;
-    let close;
-    if (this.props.closeButton !== undefined) {
-      close = this.props.closeButton;
-    } else {
-      close = trigger !== 'hover' && trigger !== 'focus';
-    }
-
     return (
       <RenderContainer>
-        <Box trigger={trigger} getTarget={this._getTarget}
-          pos={this.props.pos} close={close}
+        <Box
+          trigger={this.props.trigger}
+          getTarget={this._getTarget}
+          pos={this.props.pos}
+          close={this._isClosed()}
           onClose={this._handleBoxClose}
         >
           {content}
@@ -222,7 +234,7 @@ export default class Tooltip extends React.Component {
     return this._hotspotDOM;
   };
 
-  _handleMouseOver = (event: SyntheticMouseEvent) => {
+  _handleMouseOver = (event: SyntheticMouseEvent<>) => {
     const target: HTMLElement = (event.target: any);
     if (this._hotspotDOM) {
       const opened = this._hotspotDOM.contains(target);
@@ -236,7 +248,7 @@ export default class Tooltip extends React.Component {
     this._setOpened(false);
   };
 
-  _handleClick = (event: SyntheticMouseEvent) => {
+  _handleClick = (event: SyntheticMouseEvent<>) => {
     event.stopPropagation();
     const target: HTMLElement = (event.target: any);
     if (this._hotspotDOM) {
@@ -256,7 +268,7 @@ export default class Tooltip extends React.Component {
     }
   };
 
-  _handleFocus = (event: SyntheticFocusEvent) => {
+  _handleFocus = (event: SyntheticFocusEvent<>) => {
     this._setOpened(true);
 
     const onFocus = this._lastOnFocus;
@@ -265,7 +277,7 @@ export default class Tooltip extends React.Component {
     }
   };
 
-  _handleBlur = (event: SyntheticFocusEvent) => {
+  _handleBlur = (event: SyntheticFocusEvent<>) => {
     this._setOpened(false);
 
     const onBlur = this._lastOnBlur;
@@ -274,9 +286,18 @@ export default class Tooltip extends React.Component {
     }
   };
 
-  _setOpened(opened: bool) {
+  _setOpened(opened: boolean) {
     if (this.state.opened !== opened) {
       this.setState({ opened });
     }
   }
+
+  _isClosed = () => {
+    const trigger = this.props.trigger;
+    if (this.props.closeButton !== undefined) {
+      return this.props.closeButton;
+    }
+
+    return trigger !== 'hover' && trigger !== 'focus';
+  };
 }

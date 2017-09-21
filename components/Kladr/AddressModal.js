@@ -1,6 +1,6 @@
 // @flow
-
-import React from 'react';
+/* eslint-disable flowtype/no-weak-types */
+import * as React from 'react';
 
 import Button from '../Button';
 import ComboBox from '../ComboBoxOld';
@@ -17,22 +17,22 @@ import styles from './AddressModal.less';
 type Props = {
   address: Address,
   title: string,
-  onChange: (value: {address: Address}) => void,
-  onClose: () => void,
+  onChange: (value: { address: Address }) => void,
+  onClose: () => void
 };
 
 type State = {
   address: Address,
-  invalidField: ?string,
+  invalidField: ?string
 };
 
 type Info = {
   searchText: string,
-  address: Address,
+  address: Address
 };
 type SourceResult = {
   values: Array<PlaceDescription>,
-  infos: Array<Info>,
+  infos: Array<Info>
 };
 type SourceFunction = (searchText: string) => Promise<SourceResult>;
 type HandlerFunction = (e: any, value: PlaceDescription, info?: Info) => void;
@@ -42,10 +42,10 @@ type FieldProps = {
   renderItem: Function,
   renderValue: Function,
   valueToString: (value: PlaceDescription) => string,
-  recover: Function,
+  recover: Function
 };
 type SimpleFieldProps = {
-  onChange: (event: mixed, value: string) => void,
+  onChange: (event: mixed, value: string) => void
 };
 
 const PLACES = {
@@ -57,10 +57,7 @@ const PLACES = {
   '16': 'street'
 };
 
-export default class AddressModal extends React.Component {
-  props: Props;
-  state: State;
-
+export default class AddressModal extends React.Component<Props, State> {
   _regionProps: FieldProps;
   _districtProps: FieldProps;
   _cityProps: FieldProps;
@@ -82,16 +79,24 @@ export default class AddressModal extends React.Component {
 
     this._regionProps = this.createFieldProps('region', [], 'Region');
     this._districtProps = this.createFieldProps(
-      'district', ['region'], 'District'
+      'district',
+      ['region'],
+      'District'
     );
     this._cityProps = this.createFieldProps(
-      'city', ['region', 'district'], 'City'
+      'city',
+      ['region', 'district'],
+      'City'
     );
     this._settlementProps = this.createFieldProps(
-      'settlement', ['region', 'district', 'city'], 'Settlement'
+      'settlement',
+      ['region', 'district', 'city'],
+      'Settlement'
     );
     this._streetProps = this.createFieldProps(
-      'street', ['region', 'district', 'city', 'settlement'], 'Street'
+      'street',
+      ['region', 'district', 'city', 'settlement'],
+      'Street'
     );
     this._houseProps = this.createSimpleFieldProps('house');
     this._buildingProps = this.createSimpleFieldProps('building');
@@ -175,11 +180,7 @@ export default class AddressModal extends React.Component {
     });
   }
 
-  createSource(
-    field: string,
-    parents: Array<Place>,
-    level: string
-  ) {
+  createSource(field: string, parents: Array<Place>, level: string) {
     return (searchText: string) => {
       let parentCode = null;
       for (const parentName of parents) {
@@ -196,7 +197,7 @@ export default class AddressModal extends React.Component {
     };
   }
 
-  setStateAddress(key: string, value: PlaceDescription|string) {
+  setStateAddress(key: string, value: PlaceDescription | string) {
     this.setState({
       address: {
         ...this.state.address,
@@ -208,7 +209,9 @@ export default class AddressModal extends React.Component {
   render() {
     return (
       <Modal width={520} onClose={this.props.onClose}>
-        <Modal.Header>{this.props.title}</Modal.Header>
+        <Modal.Header>
+          {this.props.title}
+        </Modal.Header>
         <Modal.Body>
           {this._renderForm()}
         </Modal.Body>
@@ -217,7 +220,9 @@ export default class AddressModal extends React.Component {
             <Button size="medium" use="primary" onClick={this._handleSave}>
               Сохранить
             </Button>
-            <Button size="medium" onClick={this.props.onClose}>Отмена</Button>
+            <Button size="medium" onClick={this.props.onClose}>
+              Отмена
+            </Button>
           </Gapped>
         </Modal.Footer>
       </Modal>
@@ -232,8 +237,12 @@ export default class AddressModal extends React.Component {
         <div className={styles.row}>
           <div className={styles.label}>Индекс</div>
           <div className={styles.field}>
-            <Input value={this.state.address.index} width="100%"
-              onChange={(e) => {this.setStateAddress('index', e.target.value);}}
+            <Input
+              value={this.state.address.index}
+              width="100%"
+              onChange={e => {
+                this.setStateAddress('index', e.target.value);
+              }}
             />
           </div>
         </div>
@@ -315,9 +324,7 @@ export default class AddressModal extends React.Component {
         </div>
 
         <div className={styles.row}>
-          <div className={styles.label}>
-            Квартира / офис
-          </div>
+          <div className={styles.label}>Квартира / офис</div>
           <div className={styles.field}>
             <Input
               value={this.state.address.room}
@@ -355,9 +362,10 @@ export default class AddressModal extends React.Component {
     return (
       <div>
         {util.placeName(place, field)}
-        {parentNames.length > 0 && (
-          <div className={styles.menuItemParents}>{parentNames.join(', ')}</div>
-        )}
+        {parentNames.length > 0 &&
+          <div className={styles.menuItemParents}>
+            {parentNames.join(', ')}
+          </div>}
       </div>
     );
   }

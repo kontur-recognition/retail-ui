@@ -1,6 +1,9 @@
 /* @flow */
+/* eslint-disable flowtype/no-weak-types */
 
-import React, { PropTypes } from 'react';
+import * as React from 'react';
+
+import PropTypes from 'prop-types';
 
 import AddressModal from './AddressModal';
 import Colors from '../../lib/Colors';
@@ -13,17 +16,17 @@ type Props = {
   title: string,
   value: any,
   warning?: ?string,
-  onChange: any,
+  onChange: any
 };
 
 type State = {
-  opened: bool,
+  opened: boolean
 };
 
 /**
  * DRAFT
  */
-export default class Kladr extends React.Component {
+export default class Kladr extends React.Component<Props, State> {
   static propTypes = {
     error: PropTypes.string,
     title: PropTypes.string,
@@ -31,9 +34,6 @@ export default class Kladr extends React.Component {
     warning: PropTypes.string,
     onChange: PropTypes.func
   };
-
-  props: Props;
-  state: State;
 
   constructor(props: any) {
     super(props);
@@ -65,13 +65,14 @@ export default class Kladr extends React.Component {
 
     return (
       <span>
-        {!empty && (
+        {!empty &&
           <div style={{ marginBottom: 5 }}>
             {this._renderAddress(value.address)}
-          </div>
-        )}
+          </div>}
         {validation}
-        <Link icon="edit" onClick={this._handleOpen}>{change}</Link>
+        <Link icon="edit" onClick={this._handleOpen}>
+          {change}
+        </Link>
         {this.state.opened && this._renderModal()}
       </span>
     );
@@ -82,7 +83,7 @@ export default class Kladr extends React.Component {
       return null;
     }
 
-    const place = place => (place && util.placeName(place));
+    const place = place => place && util.placeName(place);
     return [
       address.index,
       place(address.region),
@@ -93,7 +94,9 @@ export default class Kladr extends React.Component {
       address.house && `дом ${address.house}`,
       address.building && `корпус ${address.building}`,
       address.room && `квартира ${address.room}`
-    ].filter(x => !!x).join(', ');
+    ]
+      .filter(x => !!x)
+      .join(', ');
   }
 
   _renderModal() {
@@ -107,12 +110,11 @@ export default class Kladr extends React.Component {
     );
   }
 
-
   _handleOpen = () => {
     this.setState({ opened: true });
   };
 
-  _handleChange = (value: {address: Address}) => {
+  _handleChange = (value: { address: Address }) => {
     const onChange = this.props.onChange;
     onChange && onChange(null, value);
   };

@@ -1,5 +1,5 @@
 // @flow
-import React from 'react';
+import * as React from 'react';
 import ReactDOM from 'react-dom';
 
 import Toast from './Toast';
@@ -19,27 +19,26 @@ class ToastStatic {
       body.appendChild(ToastStatic.node);
 
       ReactDOM.render(
-        <Toast ref={el => ToastStatic.instance = el}/>,
+        <Toast ref={el => (ToastStatic.instance = el)} />,
         ToastStatic.node,
         () => ToastStatic._push(notification, action)
       );
-
     } else {
       ToastStatic._push(notification, action);
     }
-  }
+  };
 
   static _push = function(notification, action) {
     if (ToastStatic.instance) {
       ToastStatic.instance.push(notification, action);
     }
-  }
+  };
 
   static close = function() {
     if (ToastStatic.instance) {
       ToastStatic.instance.close();
     }
-  }
+  };
 }
 
 export default ToastStatic;

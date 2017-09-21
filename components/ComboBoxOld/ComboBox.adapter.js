@@ -1,7 +1,7 @@
 // @flow
 
 import isActiveElement from '../Menu/isActiveElement';
-import React from 'react';
+import * as React from 'react';
 
 import ComboBox from './ComboBox.js';
 
@@ -27,16 +27,19 @@ const ComboBoxAdapter = {
 
   getResult({ renderer }) {
     const { result } = renderer.state;
-    return result && result.values.map(value => {
-      let val = typeof value === 'function' ? value() : value;
-      if (React.isValidElement(val)) {
-        return isActiveElement(val) ? (val.props && val.props.value) : null;
-      }
-      return val;
-    });
+    return (
+      result &&
+      result.values.map(value => {
+        let val = typeof value === 'function' ? value() : value;
+        if (React.isValidElement(val)) {
+          return isActiveElement(val) ? val.props && val.props.value : null;
+        }
+        return val;
+      })
+    );
   }
 };
-
+// eslint-disable-next-line flowtype/no-weak-types
 (ComboBox: Object).__ADAPTER__ = ComboBoxAdapter;
 
 export default ComboBox;

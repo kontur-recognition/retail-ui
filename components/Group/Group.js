@@ -1,5 +1,7 @@
 import classNames from 'classnames';
-import React, { PropTypes } from 'react';
+import React from 'react';
+
+import PropTypes from 'prop-types';
 
 import Corners from '../Button/Corners';
 
@@ -23,7 +25,7 @@ class Group extends React.Component {
 
     var first = null;
     var last = null;
-    React.Children.forEach(this.props.children, (child) => {
+    React.Children.forEach(this.props.children, child => {
       if (child) {
         first = first || child;
         last = child;
@@ -32,7 +34,7 @@ class Group extends React.Component {
 
     return (
       <span className={styles.root} style={style}>
-        {React.Children.map(this.props.children, (child) => {
+        {React.Children.map(this.props.children, child => {
           if (!child) {
             return null;
           }
@@ -64,7 +66,9 @@ class Group extends React.Component {
 
           return (
             <div className={wrapCss}>
-              <div className={itemCss}>{child}</div>
+              <div className={itemCss}>
+                {child}
+              </div>
             </div>
           );
         })}
@@ -73,4 +77,4 @@ class Group extends React.Component {
   }
 }
 
-module.exports = Group;
+export default Group;

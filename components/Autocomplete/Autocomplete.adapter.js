@@ -7,8 +7,9 @@ const AutocompleteAdapter = {
     return inst.props.value;
   },
 
-  setValue(inst: Autocomplete, value: string) {
-    inst.handleChange({ target: { value } });
+  setValue(inst: Autocomplete, value: mixed) {
+    // $FlowIssue
+    inst._handleChange({ target: { value } });
   },
 
   getSuggestions(inst: Autocomplete) {
@@ -20,6 +21,7 @@ const AutocompleteAdapter = {
   }
 };
 
-(Autocomplete: any).__ADAPTER__ = AutocompleteAdapter;
+// $FlowIssue
+Autocomplete.__ADAPTER__ = AutocompleteAdapter;
 
 export default Autocomplete;

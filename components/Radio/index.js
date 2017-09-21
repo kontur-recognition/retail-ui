@@ -1,1 +1,3 @@
-module.exports = require('./Radio');
+// @flow
+import Radio from './Radio';
+export default Radio;

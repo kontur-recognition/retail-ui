@@ -1,7 +1,8 @@
 // @flow
 
 import classNames from 'classnames';
-import React, { PropTypes } from 'react';
+import PropTypes from 'prop-types';
+import * as React from 'react';
 import { findDOMNode } from 'react-dom';
 
 import filterProps from '../filterProps';
@@ -34,32 +35,34 @@ const INPUT_PASS_PROPS = {
   onMouseOver: true
 };
 
+type DatePickerValue = Date | string | null;
+
 type Props = {
   className?: string, // legacy
   disabled?: boolean,
   error?: boolean,
-  warning?: boolean,
-  withMask?: boolean,
   maxYear?: number,
   minYear?: number,
-  placeholder?: string,
-  size?: 'small' | 'medium' | 'large',
-  value?: ?(Date | string),
-  width?: number | string,
   onBlur?: () => void,
   onChange?: (
-    e: { target: { value: Date | string | null } },
-    v: Date | string | null
+    e: { target: { value: DatePickerValue } },
+    v: DatePickerValue
   ) => void,
   onFocus?: () => void,
-  onInput?: (e: SyntheticInputEvent) => void,
-  onKeyDown?: (e: SyntheticKeyboardEvent) => void,
-  onKeyPress?: (e: SyntheticKeyboardEvent) => void,
-  onKeyUp?: (e: SyntheticKeyboardEvent) => void,
-  onMouseEnter?: (e: SyntheticMouseEvent) => void,
-  onMouseLeave?: (e: SyntheticMouseEvent) => void,
-  onMouseOver?: (e: SyntheticMouseEvent) => void,
-  onUnexpectedInput: (value: string) => any
+  onInput?: (e: SyntheticInputEvent<>) => void,
+  onKeyDown?: (e: SyntheticKeyboardEvent<>) => void,
+  onKeyPress?: (e: SyntheticKeyboardEvent<>) => void,
+  onKeyUp?: (e: SyntheticKeyboardEvent<>) => void,
+  onMouseEnter?: (e: SyntheticMouseEvent<>) => void,
+  onMouseLeave?: (e: SyntheticMouseEvent<>) => void,
+  onMouseOver?: (e: SyntheticMouseEvent<>) => void,
+  onUnexpectedInput: (value: string) => DatePickerValue,
+  placeholder?: string,
+  size?: 'small' | 'medium' | 'large',
+  value?: DatePickerValue,
+  warning?: boolean,
+  width?: number | string,
+  withMask?: boolean
 };
 
 type State = {
@@ -67,7 +70,7 @@ type State = {
   textValue: string
 };
 
-class DatePicker extends React.Component {
+class DatePicker extends React.Component<Props, State> {
   static propTypes = {
     disabled: PropTypes.bool,
 
@@ -127,25 +130,20 @@ class DatePicker extends React.Component {
     maxYear: 2100,
     width: 120,
     withMask: false,
-
-    // Flow type inheritance problem
-    onUnexpectedInput: ((() => null): (x: string) => any)
+    onUnexpectedInput: () => null
   };
 
-  props: Props;
-  state: State;
   icon: Icon;
   input: Input;
 
-  _focusSubscription: any;
+  _focusSubscription: *;
   _focused: boolean;
 
   constructor(props: Props, context: mixed) {
     super(props, context);
 
-    const textValue = typeof props.value === 'string'
-      ? props.value
-      : formatDate(props.value);
+    const textValue =
+      typeof props.value === 'string' ? props.value : formatDate(props.value);
 
     this.state = {
       opened: false,
@@ -153,19 +151,33 @@ class DatePicker extends React.Component {
     };
   }
 
+  /**
+   * @api
+   */
+  blur() {
+    this.input.blur();
+    this.handleBlur();
+  }
+
+  /**
+   * @api
+   */
+  focus() {
+    this._focused = true;
+    this.input.focus();
+  }
+
   render() {
     const { opened } = this.state;
+    const { value } = this.props;
 
-    const value = checkDate(this.props.value);
+    const date = isDate(value) ? value : null;
     let picker = null;
     if (opened) {
       picker = (
-        <DropdownContainer
-          getParent={() => findDOMNode(this)}
-          offsetY={0}
-        >
+        <DropdownContainer getParent={() => findDOMNode(this)} offsetY={0}>
           <Picker
-            value={value}
+            value={date}
             minYear={this.props.minYear}
             maxYear={this.props.maxYear}
             onPick={this.handlePick}
@@ -184,10 +196,7 @@ class DatePicker extends React.Component {
         onClickOutside={this.handleBlur}
         onFocusOutside={this.handleBlur}
       >
-        <label
-          className={className}
-          style={{ width: this.props.width }}
-        >
+        <label className={className} style={{ width: this.props.width }}>
           <DateInput
             {...filterProps(this.props, INPUT_PASS_PROPS)}
             getIconRef={this.getIconRef}
@@ -207,9 +216,8 @@ class DatePicker extends React.Component {
   componentDidUpdate({ value: oldValue }: Props) {
     const { value: newValue } = this.props;
     if (newValue !== oldValue) {
-      const textValue = typeof newValue === 'string'
-        ? newValue
-        : formatDate(newValue);
+      const textValue =
+        typeof newValue === 'string' ? newValue : formatDate(newValue);
 
       this.setState({ textValue });
     }
@@ -252,11 +260,13 @@ class DatePicker extends React.Component {
 
     const value = this.state.textValue;
     const date = parseDate(value);
-    const newDate = date === null
-      ? getDateValue(value, this.props.onUnexpectedInput)
-      : date;
+    const newDate =
+      date === null ? getDateValue(value, this.props.onUnexpectedInput) : date;
 
-    this.setState({ textValue: formatDate(newDate) });
+    const textValue =
+      typeof newDate === 'string' ? newDate : formatDate(newDate);
+
+    this.setState({ textValue });
 
     if (this.props.onChange) {
       this.props.onChange({ target: { value: newDate } }, newDate);
@@ -299,11 +309,6 @@ class DatePicker extends React.Component {
     });
   }
 
-  focus() {
-    this._focused = true;
-    this.input.focus();
-  }
-
   getInputRef = (ref: Input) => {
     this.input = ref;
   };
@@ -330,15 +335,12 @@ const getDateValue = (value, onUnexpectedInput) => {
   return null;
 };
 
-function checkDate(date) {
-  if (date instanceof Date && !isNaN(date.getTime())) {
-    return date;
-  }
-  return null;
+function isDate(date) /* : boolean %checks */ {
+  return date instanceof Date && !isNaN(date.getTime());
 }
 
 function formatDate(date) {
-  if (!date || !checkDate(date)) {
+  if (!date || !isDate(date)) {
     return '';
   }
 
@@ -352,7 +354,7 @@ function parseDate(str, withCorrection) {
   if (!date) {
     return null;
   }
-  return checkDate(date);
+  return isDate(date) ? date : null;
 }
 
 export default DatePicker;

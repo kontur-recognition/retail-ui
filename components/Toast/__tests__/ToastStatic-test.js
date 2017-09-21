@@ -1,9 +1,7 @@
-// @flow-weak
 import ToastStatic from '../ToastStatic';
 
 describe('ToastStatic', () => {
-
-  it('doesn\'t throw on push', () => {
+  it("doesn't throw on push", () => {
     ToastStatic.push('hello');
   });
 
@@ -19,5 +17,4 @@ describe('ToastStatic', () => {
     expect(toast.props.children).toBe('hello');
     expect(toast.props.action).toEqual({ label: 'hello', handler });
   });
-
 });

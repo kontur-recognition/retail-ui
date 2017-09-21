@@ -2,7 +2,9 @@
 
 import events from 'add-event-listener';
 import classNames from 'classnames';
-import React, { PropTypes } from 'react';
+import * as React from 'react';
+
+import PropTypes from 'prop-types';
 
 import Icon from '../Icon';
 
@@ -24,18 +26,23 @@ import '../ensureOldIEClassName';
 import styles from './Checkbox.less';
 
 type Props = {
-  children?: any,
   checked?: boolean,
+  children?: React.Node,
   disabled?: boolean,
   error?: boolean,
-  warning?: boolean,
   onChange?: (event: { target: { value: boolean } }, value: boolean) => void,
-  onMouseEnter?: (e: SyntheticMouseEvent) => void,
-  onMouseLeave?: (e: SyntheticMouseEvent) => void,
-  onMouseOver?: (e: SyntheticMouseEvent) => void
+  onMouseEnter?: (e: SyntheticMouseEvent<>) => void,
+  onMouseLeave?: (e: SyntheticMouseEvent<>) => void,
+  onMouseOver?: (e: SyntheticMouseEvent<>) => void,
+  warning?: boolean
 };
 
-class Checkbox extends React.Component {
+class Checkbox extends React.Component<
+  Props,
+  {
+    focusedByTab: boolean
+  }
+> {
   static propTypes = {
     checked: PropTypes.bool,
     disabled: PropTypes.bool,
@@ -47,19 +54,21 @@ class Checkbox extends React.Component {
     onMouseOver: PropTypes.func
   };
 
-  props: Props;
   input: ?HTMLInputElement;
   state: {
     focusedByTab: boolean
   } = {
     focusedByTab: false
-  }
+  };
 
   _wasFocused = false;
 
   render() {
+    const hasCaption = !!this.props.children;
+
     const rootClass = classNames({
       [styles.root]: true,
+      [styles.withoutCaption]: !hasCaption,
       [styles.isChecked]: this.props.checked,
       [styles.disabled]: this.props.disabled,
       [styles.error]: this.props.error,
@@ -67,18 +76,29 @@ class Checkbox extends React.Component {
       [styles.focus]: this.state.focusedByTab
     });
 
-    const inputProps: Object = {
+    const inputProps = {
       type: 'checkbox',
       className: styles.input,
       checked: this.props.checked,
       disabled: this.props.disabled,
-      onChange: this.handleChange,
-      ref: this._inputRef,
+      onChange: this._handleChange,
       onFocus: this._handleFocus,
-      onBlur: this._handleBlur
+      onBlur: this._handleBlur,
+      ref: this._inputRef,
+      tabIndex: undefined
     };
+
     if (this.props.tabIndex) {
       inputProps.tabIndex = this.props.tabIndex;
+    }
+
+    let caption = null;
+    if (hasCaption) {
+      caption = (
+        <div className={styles.caption}>
+          {this.props.children}
+        </div>
+      );
     }
 
     return (
@@ -95,7 +115,7 @@ class Checkbox extends React.Component {
               <Icon name="ok" />
             </div>}
         </span>
-        <span className={styles.caption}>{this.props.children}</span>
+        {caption}
       </label>
     );
   }
@@ -104,7 +124,7 @@ class Checkbox extends React.Component {
     listenTabPresses();
   }
 
-  _handleFocus = (e: SyntheticFocusEvent) => {
+  _handleFocus = (e: SyntheticFocusEvent<>) => {
     if (!this.props.disabled) {
       // focus event fires before keyDown eventlistener
       // so we should check tabPressed in async way
@@ -119,15 +139,15 @@ class Checkbox extends React.Component {
 
   _handleBlur = () => {
     this.setState({ focusedByTab: false });
-  }
+  };
 
-  _inputRef = (ref: HTMLInputElement) => {
+  _inputRef = ref => {
     this.input = ref;
   };
 
-  handleChange = (event: { target: { checked: boolean } }) => {
+  _handleChange = event => {
     const checked = event.target.checked;
-    this.props.onChange && this.props.onChange((event: any), checked);
+    this.props.onChange && this.props.onChange(event, checked);
   };
 }
 

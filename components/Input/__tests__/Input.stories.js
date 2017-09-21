@@ -1,6 +1,6 @@
 // @flow
-import React from 'react';
-import { storiesOf } from '@kadira/storybook';
+import * as React from 'react';
+import { storiesOf } from '@storybook/react';
 
 import Input from '../Input';
 import Icon from '../../Icon';
@@ -13,12 +13,10 @@ const styles = {
 };
 
 storiesOf('Input', module)
-  .add('Inputs with different states', () => (
+  .add('Inputs with different states', () =>
     <div>
       <div>
-        <div style={styles}>
-          Warning
-        </div>
+        <div style={styles}>Warning</div>
         <div id="warning-small-input-wrapper" style={styles}>
           <Input size="small" warning />
         </div>
@@ -28,9 +26,7 @@ storiesOf('Input', module)
       </div>
 
       <div>
-        <div style={styles}>
-          Error
-        </div>
+        <div style={styles}>Error</div>
         <div id="error-small-input-wrapper" style={styles}>
           <Input size="small" error />
         </div>
@@ -40,9 +36,7 @@ storiesOf('Input', module)
       </div>
 
       <div>
-        <div style={styles}>
-          Disabled
-        </div>
+        <div style={styles}>Disabled</div>
         <div id="disabled-small-input-wrapper" style={styles}>
           <Input size="small" disabled />
         </div>
@@ -53,7 +47,7 @@ storiesOf('Input', module)
 
       <div>
         <div style={styles}>
-          Disabled<br/> (with text)
+          Disabled<br /> (with text)
         </div>
         <div id="disabled-text-small-input-wrapper" style={styles}>
           <Input size="small" value="Some text" disabled />
@@ -64,9 +58,7 @@ storiesOf('Input', module)
       </div>
 
       <div>
-        <div style={styles}>
-          Placeholder
-        </div>
+        <div style={styles}>Placeholder</div>
         <div id="placeholder-small-input-wrapper" style={styles}>
           <Input size="small" placeholder="Placeholder" />
         </div>
@@ -76,9 +68,7 @@ storiesOf('Input', module)
       </div>
 
       <div>
-        <div style={styles}>
-          Password
-        </div>
+        <div style={styles}>Password</div>
         <div id="password-small-input-wrapper" style={styles}>
           <Input size="small" value="password" type="password" />
         </div>
@@ -88,9 +78,7 @@ storiesOf('Input', module)
       </div>
 
       <div>
-        <div style={styles}>
-          Borderless
-        </div>
+        <div style={styles}>Borderless</div>
         <div id="borderless-small-input-wrapper" style={styles}>
           <Input size="small" borderless />
         </div>
@@ -100,9 +88,7 @@ storiesOf('Input', module)
       </div>
 
       <div>
-        <div style={styles}>
-          Left icon
-        </div>
+        <div style={styles}>Left icon</div>
         <div id="left-icon-small-input-wrapper" style={styles}>
           <Input size="small" leftIcon={<Icon name="search" />} />
         </div>
@@ -112,9 +98,7 @@ storiesOf('Input', module)
       </div>
 
       <div>
-        <div style={styles}>
-          Right icon
-        </div>
+        <div style={styles}>Right icon</div>
         <div id="right-icon-small-input-wrapper" style={styles}>
           <Input size="small" rightIcon={<Icon name="search" />} />
         </div>
@@ -123,8 +107,8 @@ storiesOf('Input', module)
         </div>
       </div>
     </div>
-  ))
-  .add('Inputs with different sizes', () => (
+  )
+  .add('Inputs with different sizes', () =>
     <div>
       <div id="small-input-wrapper" style={styles}>
         <Input size="small" />
@@ -133,7 +117,15 @@ storiesOf('Input', module)
         <Input size="medium" />
       </div>
       <div id="large-input-wrapper" style={styles}>
-        <Input  size="large" />
+        <Input size="large" />
       </div>
     </div>
-  ));
+  )
+  .add('Input with phone mask', () =>
+    <Input
+      width="150"
+      mask="+7 999 999-99-99"
+      maskChar={null}
+      placeholder="+7"
+    />
+  );

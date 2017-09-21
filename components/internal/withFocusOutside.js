@@ -1,6 +1,6 @@
 // @flow
-/* global Class, React$Element, React$Component, $Diff */
-import React from 'react';
+/* eslint-disable flowtype/no-weak-types */
+import * as React from 'react';
 import events from 'add-event-listener';
 import { findDOMNode } from 'react-dom';
 
@@ -8,48 +8,59 @@ import listenFocusOutside, {
   containsTargetOrRenderContainer
 } from '../../lib/listenFocusOutside';
 
-type FunctionComponent<P> = (props: P) => ?React$Element<any>;
-type ClassComponent<D, P, S> = Class<React$Component<D, P, S>>;
-
 type PassingProps = {
-  subscribeToOutsideFocus: ((e: Event) => any) => void,
-  subscribeToOutsideClicks: ((e: Event) => any) => void
+  subscribeToOutsideFocus: (fn: (e: Event) => any) => any,
+  subscribeToOutsideClicks: (fn: (e: Event) => any) => any
 };
 
-function withFocusOutside<P, S>(
-  WrappingComponent: ClassComponent<void, P, S> | FunctionComponent<P>
-): ClassComponent<void, $Diff<P, PassingProps>, S> {
-  class WrappedComponent extends React.Component {
-    props: any;
-    state: any;
+type ParamsProps = { active?: boolean, innerRef?: any };
+
+function withFocusOutside<Props: ParamsProps>(
+  WrappingComponent: React.ComponentType<PassingProps & Props>
+) {
+  class WrappedComponent extends React.Component<Props> {
+    static defaultProps = { active: true };
 
     _focusHandlers: Array<(e: Event) => any> = [];
     _clickHandlers: Array<(e: Event) => any> = [];
 
     _focusSubscribtion: any;
+    _unmounted = false;
 
     component: any;
 
-    _ref = el => {
+    componentWillReceiveProps(nextProps: Props) {
+      if (this.props.active && !nextProps.active && this._focusSubscribtion) {
+        this._flush();
+      }
+      if (!this.props.active && nextProps.active && !this._focusSubscribtion) {
+        this._listen();
+      }
+    }
 
+    _ref = el => {
       this.component = el;
 
       if (this._focusSubscribtion) {
         this._flush();
       }
 
-      if (el) {
-        this._focusSubscribtion = listenFocusOutside(
-          [this._getDomNode()],
-          this._handleFocusOutside
-        );
-
-        events.addEventListener(
-          document,
-          'mousedown', // check just before click event
-          this._handleNativeDocClick
-        );
+      if (el && this.props.active) {
+        this._listen();
       }
+    };
+
+    _listen = () => {
+      this._focusSubscribtion = listenFocusOutside(
+        [this._getDomNode()],
+        this._handleFocusOutside
+      );
+
+      events.addEventListener(
+        document,
+        'mousedown', // check just before click event
+        this._handleNativeDocClick
+      );
     };
 
     _flush() {
@@ -78,6 +89,9 @@ function withFocusOutside<P, S>(
     };
 
     _handleNativeDocClick = event => {
+      if (this._unmounted) {
+        return;
+      }
       const target = event.target || event.srcElement;
       const node = this._getDomNode();
 
@@ -102,6 +116,7 @@ function withFocusOutside<P, S>(
       if (this._focusSubscribtion) {
         this._flush();
       }
+      this._unmounted = true;
     }
 
     render() {

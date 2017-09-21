@@ -1,4 +1,6 @@
-import React, { PropTypes } from 'react';
+import React from 'react';
+
+import PropTypes from 'prop-types';
 
 import styles from './Icon.less';
 
@@ -13,7 +15,8 @@ var MAP = {
   clear: '\ue030',
   grid: '\ue03e',
   money: '\ue046',
-  'help-circle': '\ue055'
+  'help-circle': '\ue055',
+  kebab: '\ue0c9'
 };
 
 class Icon extends React.Component {
@@ -35,9 +38,11 @@ class Icon extends React.Component {
       color: this.props.color
     };
     return (
-      <span className={styles.root} style={style}>{MAP[this.props.name]}</span>
+      <span className={styles.root} style={style}>
+        {MAP[this.props.name]}
+      </span>
     );
   }
 }
 
-module.exports = Icon;
+export default Icon;

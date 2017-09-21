@@ -1,38 +1,41 @@
 // @flow
 
-import React from 'react';
+import * as React from 'react';
 
 import HintBox from './HintBox';
 
 type Props = {
-  children?: any,
-  pos: 'top' | 'right' | 'bottom' | 'left',
-  text: string,
+  children?: React.Node,
   manual: boolean,
   maxWidth: string | number,
+  onMouseEnter: (e: SyntheticMouseEvent<>) => void,
+  onMouseLeave: (e: SyntheticMouseEvent<>) => void,
   opened: boolean,
-  onMouseEnter: (e: SyntheticMouseEvent) => void,
-  onMouseLeave: (e: SyntheticMouseEvent) => void
+  pos: 'top' | 'right' | 'bottom' | 'left',
+  text: string
 };
 
-export default class Hint extends React.Component {
+type State = {
+  opened: boolean
+};
+
+export default class Hint extends React.Component<Props, State> {
   static defaultProps = {
     pos: 'top',
     manual: false,
     opened: false,
     maxWidth: (200: string | number),
-    onMouseEnter: (e: SyntheticMouseEvent) => {},
-    onMouseLeave: (e: SyntheticMouseEvent) => {}
+    onMouseEnter: (e: SyntheticMouseEvent<>) => {},
+    onMouseLeave: (e: SyntheticMouseEvent<>) => {}
   };
 
-  props: Props;
   state: {
     opened: boolean
   } = {
     opened: false
   };
 
-  _timer: number = 0;
+  _timer: ?number = null;
   _dom: ?HTMLElement;
 
   componentDidMount() {
@@ -51,6 +54,12 @@ export default class Hint extends React.Component {
     }
   }
 
+  componentWillUnmount() {
+    if (this._timer) {
+      clearTimeout(this._timer);
+    }
+  }
+
   isOpened() {
     return this.state.opened;
   }
@@ -61,6 +70,7 @@ export default class Hint extends React.Component {
         ref={this._ref}
         onMouseEnter={this._handleMouseEnter}
         onMouseLeave={this._handleMouseLeave}
+        style={{ display: 'inline-block' }}
       >
         {this.props.children}
         {this.isOpened() &&
@@ -83,15 +93,16 @@ export default class Hint extends React.Component {
   };
 
   _handleMouseEnter = e => {
-    if (!this.props.manual) {
+    if (!this.props.manual && !this._timer) {
       this._timer = setTimeout(this._open, 400);
     }
     this.props.onMouseEnter(e);
   };
 
   _handleMouseLeave = e => {
-    if (!this.props.manual) {
+    if (!this.props.manual && this._timer) {
       clearTimeout(this._timer);
+      this._timer = null;
       this.setState({ opened: false });
     }
     this.props.onMouseLeave(e);

@@ -1,7 +1,7 @@
 // @flow
 
 import classNames from 'classnames';
-import React from 'react';
+import * as React from 'react';
 
 import styles from './Calendar.less';
 
@@ -38,10 +38,7 @@ type State = {
   pos: number
 };
 
-export default class Calendar extends React.Component {
-  props: Props;
-  state: State;
-
+export default class Calendar extends React.Component<Props, State> {
   constructor(props: Props, context: mixed) {
     super(props, context);
 
@@ -55,8 +52,8 @@ export default class Calendar extends React.Component {
     if (offset < 0) {
       offset += DAY_HEIGHT;
     }
-    const from = (this.state.pos - offset) / DAY_HEIGHT * WEEK -
-      FIRST_WEEK_SHIFT;
+    const from =
+      (this.state.pos - offset) / DAY_HEIGHT * WEEK - FIRST_WEEK_SHIFT;
     const week = getWeek(from);
 
     const months = [];
@@ -88,7 +85,9 @@ export default class Calendar extends React.Component {
         <div key={+monthStart} className={monthClass} style={style}>
           <div style={wrapperStyle}>
             {MONTH_NAMES[monthStart.getUTCMonth()]}
-            <div className={styles.year}>{monthStart.getUTCFullYear()}</div>
+            <div className={styles.year}>
+              {monthStart.getUTCFullYear()}
+            </div>
           </div>
         </div>
       );
@@ -127,7 +126,7 @@ export default class Calendar extends React.Component {
     this.setState({ pos: dateToPos(newDate) });
   }
 
-  handleWheel = (event: SyntheticWheelEvent) => {
+  handleWheel = (event: SyntheticWheelEvent<>) => {
     event.preventDefault();
     let deltaY = event.deltaY;
     if (event.deltaMode === 1) {

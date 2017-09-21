@@ -1,41 +1,50 @@
 // @flow
-import React from 'react';
-import { storiesOf } from '@kadira/storybook';
+/* eslint-disable react/no-multi-comp */
+import * as React from 'react';
+import { storiesOf } from '@storybook/react';
 
 import ComboBox from '../ComboBox';
 
 function source() {
   return Promise.resolve({
-    values: [1, 2, 3],
-    infos: [1, 2, 3]
+    values: ['One', 'Two', 'Three'],
+    infos: ['One', 'Two', 'Three']
   });
 }
 
 function renderValue(value) {
-  return <span>{value}</span>;
+  return (
+    <span>
+      {value}
+    </span>
+  );
 }
 
 function renderItem(value) {
-  return <span>{value}</span>;
+  return (
+    <span>
+      {value}
+    </span>
+  );
 }
 
 storiesOf('Combobox OLD', module)
-  .add('Simple combobox', () => (
+  .add('Simple combobox', () =>
     <ComboBox
       source={source}
-      value={1}
+      value={'One'}
       renderValue={renderValue}
       renderItem={renderItem}
     />
-  ))
-  .add('combobox with text', () => (
+  )
+  .add('combobox with text', () =>
     <div>
       <ComboBox
         source={source}
-        value={1}
+        value={'One'}
         renderValue={renderValue}
         renderItem={renderItem}
       />{' '}
       Some text here
     </div>
-  ));
+  );

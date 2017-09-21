@@ -1,11 +1,12 @@
 // @flow
-import React from 'react';
+import * as React from 'react';
 import ComboBoxV2 from '../ComboBox';
 import { mount } from 'enzyme';
 
 function clickOutside() {
   const event = document.createEvent('HTMLEvents');
   event.initEvent('mousedown', true, true);
+  // eslint-disable-next-line
   (document.body: any).dispatchEvent(event);
 }
 
@@ -19,7 +20,7 @@ describe('ComboBox V2', () => {
   });
 
   it('fetches item when focused', async () => {
-    const search = jest.fn(() => Promise.resolve());
+    const search = jest.fn(() => Promise.resolve([]));
     const wrapper = mount(<ComboBoxV2 getItems={search} />);
 
     wrapper.find('InputLikeText').simulate('focus');
@@ -28,7 +29,7 @@ describe('ComboBox V2', () => {
   });
 
   it('fetches items on input', async () => {
-    const search = jest.fn(() => Promise.resolve());
+    const search = jest.fn(() => Promise.resolve([]));
     const wrapper = mount(<ComboBoxV2 getItems={search} />);
 
     wrapper.find('InputLikeText').simulate('focus'); // called search 1 time
@@ -83,9 +84,7 @@ describe('ComboBox V2', () => {
     const items = ['one', 'two', 'three'];
     const search = jest.fn(() => Promise.resolve(items));
     const onChange = jest.fn();
-    const wrapper = mount(
-      <ComboBoxV2 getItems={search} onChange={onChange} />
-    );
+    const wrapper = mount(<ComboBoxV2 getItems={search} onChange={onChange} />);
 
     wrapper.find('InputLikeText').simulate('focus');
 
@@ -106,9 +105,7 @@ describe('ComboBox V2', () => {
     const items = ['one', 'two', 'three'];
     const search = jest.fn(() => Promise.resolve(items));
     const onChange = jest.fn();
-    const wrapper = mount(
-      <ComboBoxV2 getItems={search} onChange={onChange} />
-    );
+    const wrapper = mount(<ComboBoxV2 getItems={search} onChange={onChange} />);
 
     wrapper.find('InputLikeText').simulate('focus');
 
@@ -140,10 +137,7 @@ describe('ComboBox V2', () => {
     const search = jest.fn(() => Promise.reject());
     const onUnexpectedInput = jest.fn();
     const wrapper = mount(
-      <ComboBoxV2
-        getItems={search}
-        onUnexpectedInput={onUnexpectedInput}
-      />
+      <ComboBoxV2 getItems={search} onUnexpectedInput={onUnexpectedInput} />
     );
 
     wrapper.find('InputLikeText').simulate('focus');
@@ -204,9 +198,7 @@ describe('ComboBox V2', () => {
     ];
     const search = jest.fn(() => Promise.resolve(items));
     const onChange = jest.fn();
-    const wrapper = mount(
-      <ComboBoxV2 getItems={search} onChange={onChange} />
-    );
+    const wrapper = mount(<ComboBoxV2 getItems={search} onChange={onChange} />);
 
     wrapper.find('InputLikeText').simulate('focus');
 
@@ -218,9 +210,6 @@ describe('ComboBox V2', () => {
     menu
       .children()
       .findWhere(x => x.matchesElement(<div>Hello, world</div>))
-      .tap(x => {
-        expect(x.prop('onClick')).toBeInstanceOf(Function);
-      })
       .simulate('click');
 
     expect(onChange).toHaveBeenCalledTimes(1);
@@ -244,11 +233,7 @@ describe('ComboBox V2', () => {
 
   it('calls element onClick on custom element select', async () => {
     const onClick = jest.fn();
-    const items = [
-      <div onClick={onClick}>
-        Hello, world
-      </div>
-    ];
+    const items = [<div onClick={onClick}>Hello, world</div>];
     const search = jest.fn(() => Promise.resolve(items));
 
     const wrapper = mount(<ComboBoxV2 getItems={search} />);

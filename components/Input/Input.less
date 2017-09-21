@@ -16,10 +16,12 @@
     box-sizing: border-box;
     font-family: inherit;
     font-size: 14px;
+    line-height: 16px;
     margin: 0; // For Safari.
     outline: none;
     padding: 0 @side-padding;
     width: 100%;
+    -webkit-appearance: none;
   }
 
   .input::-ms-clear {
@@ -34,9 +36,16 @@
     line-height: 38px;
   }
 
-  .sizeLarge .input {
-    line-height: 42px;
-    font-size: 16px;
+  .sizeLarge {
+    .input {
+      line-height: 42px;
+      font-size: 16px;
+    }
+
+    .placeholder {
+      font-size: 16px;
+      height: 21px;
+    }
   }
 
   :global(.rt-ie-any) {
@@ -54,6 +63,22 @@
     .sizeLarge .input {
       height: 44px;
     }
+
+    .input {
+      box-shadow: none !important;
+    }
+
+    .input:focus {
+      outline: 1px solid @border-color-focus;
+    }
+
+    .warning .input {
+      outline: 1px solid @border-color-warning;
+    }
+
+    .error .input {
+      outline: 1px solid @border-color-error;
+    }
   }
 
   .input:focus {
@@ -61,12 +86,6 @@
     box-shadow: 0 0 0 1px @border-color-focus;
     position: relative;
     z-index: 2;
-  }
-
-  :global(.rt-ie8) {
-    .input:focus {
-      outline: 1px solid @border-color-focus;
-    }
   }
 
   .disabled .input {
@@ -110,7 +129,8 @@
   .placeholder {
     bottom: 1px;
     color: #aaa;
-    font-size: inherit;
+    font-size: 14px;
+    line-height: normal;
     left: @side-padding + 1;
     overflow: hidden;
     position: absolute;
@@ -137,8 +157,8 @@
   .rightIcon {
     color: #a9a9a9;
     cursor: text;
-    line-height: 32px;
-    height: 32px;
+    line-height: 34px;
+    height: 34px;
     position: absolute;
     top: 0;
     z-index: 2;

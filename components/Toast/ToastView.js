@@ -1,5 +1,6 @@
 // @flow
-import React, { Component, PropTypes } from 'react';
+import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 import CROSS from '../internal/cross';
 
 import styles from './Toast.less';
@@ -11,11 +12,9 @@ type Props = {
     handler: () => void
   },
   onClose?: () => void
-}
+};
 
-class ToastView extends Component {
-  props: Props;
-
+class ToastView extends Component<Props> {
   static propTypes = {
     /**
      * Adds action handling and close icon fot tost
@@ -29,15 +28,10 @@ class ToastView extends Component {
      */
     children: PropTypes.string.isRequired,
     onClose: PropTypes.func
-  }
+  };
 
   render() {
-    const {
-      children,
-      action,
-      onClose,
-      ...rest
-    } = this.props;
+    const { children, action, onClose, ...rest } = this.props;
 
     const link = action
       ? <span className={styles.link} onClick={action.handler}>

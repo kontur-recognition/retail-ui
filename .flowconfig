@@ -2,6 +2,10 @@
 .*/testing/react-devtools/.*
 .*/fbjs/lib/fetchWithRetries.js.flow
 .*/fbjs/lib/PromiseMap.js.flow
+.*/fbjs/lib/Deferred.js.flow
+.*/fbjs/lib/resolveImmediate.js.flow
+.*/node_modules/stylelint/.*
+.*/node_modules/radium/src/.*
 
 [include]
 

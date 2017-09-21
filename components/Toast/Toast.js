@@ -11,18 +11,18 @@ import './Toast.less';
 export type Action = {
   label: string,
   handler: () => void
-}
+};
 
 type State = {
   notification: ?string,
   action: ?Action,
   id: number
-}
+};
 
 type Props = {
   onPush?: (notification: string, action?: Action) => void,
   onClose?: (notification: string, action?: Action) => void
-}
+};
 
 /**
  * Toast manages notifications
@@ -33,11 +33,7 @@ type Props = {
  * Can be used like `Toast.push('message')` or
  * `Toast.push('message', {label: 'Cancel', handler: cancelHandler})`
  */
-class Toast extends Component {
-
-  state: State;
-  props: Props;
-
+class Toast extends Component<Props, State> {
   _timeout: number;
   _toast: ToastView;
 
@@ -84,7 +80,7 @@ class Toast extends Component {
   close = () => {
     safelyCall(this.props.onClose, this.state.notification, this.state.action);
     this.setState({ notification: null, action: null });
-  }
+  };
 
   render() {
     return (
@@ -109,6 +105,7 @@ class Toast extends Component {
       return null;
     }
 
+    // eslint-disable-next-line flowtype/no-weak-types
     const toastProps: Object = {
       key: id,
       onMouseEnter: this._clearTimer,
@@ -124,14 +121,14 @@ class Toast extends Component {
 
   _refToast = (el: ToastView) => {
     this._toast = el;
-  }
+  };
 
   _clearTimer = () => {
     if (this._timeout) {
       clearTimeout(this._timeout);
       this._timeout = 0;
     }
-  }
+  };
 
   _setTimer = () => {
     this._clearTimer();
@@ -139,11 +136,12 @@ class Toast extends Component {
     const timeOut = this.state.action ? 7 : 3;
 
     this._timeout = setTimeout(this.close, timeOut * 1000);
-  }
+  };
 }
 
 export default Toast;
 
+// eslint-disable-next-line flowtype/no-weak-types
 function safelyCall(fn: ?Function, ...args: any[]) {
   if (fn) {
     fn(...args);

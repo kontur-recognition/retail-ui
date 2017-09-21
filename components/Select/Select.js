@@ -1,6 +1,8 @@
+// @flow
 import events from 'add-event-listener';
 import classNames from 'classnames';
-import React, { PropTypes } from 'react';
+import * as React from 'react';
+import PropTypes from 'prop-types';
 import ReactDOM from 'react-dom';
 
 import Button from '../Button';
@@ -13,14 +15,16 @@ import Menu from '../Menu/Menu';
 import MenuItem from '../MenuItem/MenuItem';
 import MenuSeparator from '../MenuSeparator/MenuSeparator';
 import RenderLayer from '../RenderLayer';
+import Item from './Item';
 
 import styles from './Select.less';
 
 export type ButtonParams = {
-  opened: boolean,
-  label: React.Element,
+  disabled?: boolean,
+  label: React.Node,
   onClick: () => void,
-  onKeyDown: (event: SyntheticKeyboardEvent) => void
+  onKeyDown: (event: SyntheticKeyboardEvent<>) => void,
+  opened: boolean
 };
 
 const PASS_BUTTON_PROPS = {
@@ -35,8 +39,48 @@ const PASS_BUTTON_PROPS = {
   onMouseOver: true
 };
 
-class Select extends React.Component {
+type Props<V, I> = {
+  _icon?: string,
+  _renderButton?: (params: ButtonParams) => React.Node,
+  defaultValue?: V,
+  diadocLinkIcon?: string,
+  disablePortal?: boolean,
+  disabled?: boolean,
+  error?: boolean,
+  filterItem: (value: V, item: I, pattern: string) => boolean,
+  items?: I[],
+  maxMenuHeight?: number,
+  maxWidth?: number | string,
+  menuAlign?: 'left' | 'right',
+  menuWidth?: number | string,
+  onChange?: (e: { target: { value: V } }, value: V) => void,
+  onClose?: () => void,
+  onMouseEnter?: (e: SyntheticMouseEvent<>) => void,
+  onMouseLeave?: (e: SyntheticMouseEvent<>) => void,
+  onMouseOver?: (e: SyntheticMouseEvent<>) => void,
+  onOpen?: () => void,
+  placeholder?: React.Node,
+  renderItem: (value: V, item: I) => React.Node,
+  renderValue: (value: V, item: I) => React.Node,
+  areValuesEqual: (value1: V, value2: V) => boolean,
+  search?: boolean,
+  value?: ?V,
+  width?: number | string
+};
+
+type State = {
+  opened: boolean,
+  searchPattern?: string,
+  value: mixed
+};
+
+class Select<V, I> extends React.Component<Props<V, I>, State> {
   static propTypes = {
+    /**
+    * Функция для сравнения `value` с элементом из `items`
+    */
+    areValuesEqual: PropTypes.func,
+
     defaultValue: PropTypes.any,
 
     /**
@@ -118,11 +162,18 @@ class Select extends React.Component {
     placeholder: 'ничего не выбрано',
     renderValue,
     renderItem,
+    areValuesEqual,
     filterItem
   };
 
-  constructor(props, context) {
-    super(props, context);
+  static SEP = () => <MenuSeparator />;
+
+  static Item = Item;
+
+  _menu: ?Menu;
+
+  constructor(props: Props<V, I>, context: mixed) {
+    super(props, (context: mixed));
 
     this.state = {
       opened: false,
@@ -136,16 +187,20 @@ class Select extends React.Component {
     var label;
     if (value != null) {
       label = this.props.renderValue(
+        // $FlowIssue
         value,
-        getItemByValue(this.props.items, value)
+        // $FlowIssue
+        this._getItemByValue(this.props.items, value)
       );
     } else {
       label = (
-        <span className={styles.placeholder}>{this.props.placeholder}</span>
+        <span className={styles.placeholder}>
+          {this.props.placeholder}
+        </span>
       );
     }
 
-    const buttonParams = {
+    const buttonParams: ButtonParams = {
       opened: this.state.opened,
       label,
       onClick: this._toggle,
@@ -153,7 +208,8 @@ class Select extends React.Component {
     };
 
     const style = {
-      width: this.props.width
+      width: this.props.width,
+      maxWidth: undefined
     };
     if (this.props.maxWidth) {
       style.maxWidth = this.props.maxWidth;
@@ -163,6 +219,7 @@ class Select extends React.Component {
       <RenderLayer
         onClickOutside={this._close}
         onFocusOutside={this._close}
+        active={this.state.opened}
       >
         <span className={styles.root} style={style}>
           {this.props._renderButton
@@ -215,7 +272,9 @@ class Select extends React.Component {
     return (
       <Button {...buttonProps}>
         <span {...labelProps}>
-          <span className={styles.labelText}>{params.label}</span>
+          <span className={styles.labelText}>
+            {params.label}
+          </span>
           <div className={styles.arrowWrap}>
             <div className={styles.arrow} />
           </div>
@@ -235,7 +294,11 @@ class Select extends React.Component {
       onKeyDown: params.onKeyDown
     };
 
-    return <Link {...linkProps}>{params.label}</Link>;
+    return (
+      <Link {...linkProps}>
+        {params.label}
+      </Link>
+    );
   }
 
   renderMenu() {
@@ -243,10 +306,7 @@ class Select extends React.Component {
     if (this.props.search) {
       search = (
         <div className={styles.search}>
-          <Input
-            ref={c => c && ReactDOM.findDOMNode(c).focus()}
-            onChange={this.handleSearch}
-          />
+          <Input ref={this._focusInput} onChange={this.handleSearch} />
         </div>
       );
     }
@@ -261,6 +321,7 @@ class Select extends React.Component {
         align={this.props.menuAlign}
         disablePortal={this.props.disablePortal}
       >
+        {/* $FlowIssue */}
         <Menu
           ref={this._refMenu}
           width={this.props.menuWidth}
@@ -268,29 +329,54 @@ class Select extends React.Component {
           maxHeight={this.props.maxMenuHeight}
         >
           {search}
-          {this.mapItems((iValue, item, i, comment) => {
-            if (typeof item === 'function' || React.isValidElement(item)) {
-              return React.cloneElement(
-                typeof item === 'function' ? item() : item,
-                { key: i }
+          {this._mapItems(
+            (
+              iValue: V,
+              item: I | (() => React.Node),
+              i: number,
+              comment: ?React.Node
+            ) => {
+              if (typeof item === 'function' || React.isValidElement(item)) {
+                return React.cloneElement(
+                  // $FlowIssue React.isValidElement doesn't provide $checks
+                  typeof item === 'function' ? item() : item,
+                  { key: i }
+                );
+              }
+
+              return (
+                <MenuItem
+                  key={i}
+                  state={
+                    /* $FlowIssue */
+                    this.props.areValuesEqual(iValue, value) ? 'selected' : null
+                  }
+                  onClick={this._select.bind(this, iValue)}
+                  comment={comment}
+                >
+                  {this.props.renderItem(iValue, item)}
+                </MenuItem>
               );
             }
-
-            return (
-              <MenuItem
-                key={i}
-                state={iValue === value ? 'selected' : null}
-                onClick={this._select.bind(this, iValue)}
-                comment={comment}
-              >
-                {this.props.renderItem(iValue, item)}
-              </MenuItem>
-            );
-          })}
+          )}
         </Menu>
       </DropdownContainer>
     );
   }
+
+  static static = element => {
+    invariant(
+      React.isValidElement(element) || typeof element === 'function',
+      'Select.static(element) expects element to be a valid react element.'
+    );
+    return element;
+  };
+
+  _focusInput = input => {
+    if (input) {
+      input.focus();
+    }
+  };
 
   _refMenuContainer = el => {
     events.removeEventListener(window, 'popstate', this._close);
@@ -311,10 +397,17 @@ class Select extends React.Component {
     this._open();
   }
 
+  /**
+   * @api
+   */
+  close() {
+    this._close();
+  }
+
   _handleNativeDocClick = event => {
     const target = event.target || event.srcElement;
     const nodes = this._getDomNodes();
-    if (nodes.some(node => node.contains(target))) {
+    if (nodes.some(node => node && node.contains(target))) {
       return;
     }
     this._close();
@@ -354,7 +447,7 @@ class Select extends React.Component {
     events.removeEventListener(window, 'popstate', this._close);
   };
 
-  handleKey = e => {
+  handleKey = (e: SyntheticKeyboardEvent<>) => {
     var key = e.key;
     if (!this.state.opened) {
       if (key === ' ' || key === 'ArrowUp' || key === 'ArrowDown') {
@@ -363,9 +456,7 @@ class Select extends React.Component {
       }
     } else {
       if (key === 'Escape') {
-        this.setState({ opened: false }, () => {
-          ReactDOM.findDOMNode(this).focus();
-        });
+        this.setState({ opened: false }, this._focus);
       } else if (e.key === 'ArrowUp') {
         e.preventDefault();
         this._menu && this._menu.up();
@@ -374,24 +465,33 @@ class Select extends React.Component {
         this._menu && this._menu.down();
       } else if (e.key === 'Enter') {
         e.preventDefault(); // To prevent form submission.
-        this._menu && this._menu.enter();
+        this._menu && this._menu.enter(e);
       }
     }
   };
 
-  handleSearch = event => {
+  handleSearch = (event: SyntheticInputEvent<>) => {
     this.setState({ searchPattern: event.target.value });
   };
 
-  _select(value) {
-    this.setState({
-      opened: false,
-      value
-    }, () => {
-      setTimeout(() => {
-        ReactDOM.findDOMNode(this).focus();
-      }, 0);
-    });
+  _focus = () => {
+    const node = ReactDOM.findDOMNode(this);
+    if (node) {
+      // $FlowIssue
+      node.focus();
+    }
+  };
+
+  _select(value: V) {
+    this.setState(
+      {
+        opened: false,
+        value
+      },
+      () => {
+        setTimeout(this._focus, 0);
+      }
+    );
     if (this.props.onChange) {
       this.props.onChange({ target: { value } }, value);
     }
@@ -404,15 +504,21 @@ class Select extends React.Component {
     return this.state.value;
   }
 
-  mapItems(fn) {
-    const pattern = this.state.searchPattern &&
-      this.state.searchPattern.toLowerCase();
+  _mapItems(fn) {
+    const { items } = this.props;
+    if (!items) {
+      return [];
+    }
+    const pattern =
+      this.state.searchPattern && this.state.searchPattern.toLowerCase();
 
     const ret = [];
     let index = 0;
-    for (const entry of this.props.items) {
+    for (const entry of items) {
       const [value, item, comment] = normalizeEntry(entry);
+      // $FlowIssue
       if (!pattern || this.props.filterItem(value, item, pattern)) {
+        // $FlowIssue
         ret.push(fn(value, item, index, comment));
         ++index;
       }
@@ -420,24 +526,21 @@ class Select extends React.Component {
 
     return ret;
   }
-}
 
-Select.SEP = () => <MenuSeparator />;
-
-Select.Item = class Item extends React.Component {
-  render() {
-    return <MenuItem>{this.props.children}</MenuItem>;
+  _getItemByValue(items: ?(I[]), value: V) {
+    if (!items) {
+      return null;
+    }
+    for (let entry of items) {
+      const [itemValue, item] = normalizeEntry(entry);
+      // $FlowIssue
+      if (this.props.areValuesEqual(itemValue, value)) {
+        return item;
+      }
+    }
+    return null;
   }
-};
-
-Select.static = function(element) {
-  invariant(
-    React.isValidElement(element) || typeof element === 'function',
-    'Select.static(element) expects element to be a valid react element.'
-  );
-
-  return element;
-};
+}
 
 function renderValue(value, item) {
   return item;
@@ -447,21 +550,15 @@ function renderItem(value, item) {
   return item;
 }
 
-function getItemByValue(items, value) {
-  for (let entry of items) {
-    entry = normalizeEntry(entry);
-    if (entry[0] === value) {
-      return entry[1];
-    }
-  }
-  return null;
+function areValuesEqual(value1, value2) {
+  return value1 === value2;
 }
 
 function normalizeEntry(entry) {
   if (Array.isArray(entry)) {
     return entry;
   } else {
-    return [entry, entry];
+    return [entry, entry, undefined];
   }
 }
 

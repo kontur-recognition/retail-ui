@@ -1,39 +1,17 @@
 import React from 'react';
-import { storiesOf } from '@kadira/storybook';
-import {
-  withKnobs,
-  text,
-  boolean,
-  select,
-  number
-} from '@kadira/storybook-addon-knobs';
+import { storiesOf } from '@storybook/react';
 import Button from '../../Button';
 import Gapped from '../../Gapped';
-import Icon from '../../Icon';
-
-const getKnobs = () => ({
-  use: select(
-    'use', ['default', 'primary', 'success', 'danger', 'pay'], 'default'
-  ),
-  size: select('size', ['small', 'medium', 'large'], 'small'),
-  children: text('children', 'Hello'),
-  loading: boolean('loading', false),
-  disabled: boolean('disabled', false),
-  active: boolean('active', false),
-  checked: boolean('checked', false),
-  width: number('width'),
-  icon: select('icon', [''].concat(Icon.getAllNames()), '')
-});
 
 storiesOf('Button', module)
-  .addDecorator(withKnobs)
   .add('playground', () => {
-    const { children, ...rest } = getKnobs();
-    return <Button {...rest}>
-      {children}
-    </Button>;
+    return (
+      <Button>
+        Hello
+      </Button>
+    );
   })
-  .add('different use', () => (
+  .add('different use', () =>
     <Gapped>
       <Button>Default</Button>
       <Button use="primary">Primary</Button>
@@ -41,21 +19,23 @@ storiesOf('Button', module)
       <Button use="danger">Danger</Button>
       <Button use="pay">Pay</Button>
     </Gapped>
-  ))
-  .add('different sizes', () => (
+  )
+  .add('different sizes', () =>
     <Gapped>
       <Button>Small</Button>
       <Button size="medium">Medium</Button>
       <Button size="large">Large</Button>
     </Gapped>
-  ))
+  )
   .add('with icons', () => {
-    const icon = select('icon', Icon.getAllNames(), 'ok');
-    return <Gapped>
-      <Button icon={icon}>Small</Button>
-      <Button size="medium" icon={icon}>Medium</Button>
-      <Button size="large" icon={icon}>Large</Button>
-    </Gapped>;
+    const icon = 'ok';
+    return (
+      <Gapped>
+        <Button icon={icon}>Small</Button>
+        <Button size="medium" icon={icon}>Medium</Button>
+        <Button size="large" icon={icon}>Large</Button>
+      </Gapped>
+    );
   })
   .add('with icon, fixed width and long text', () => {
     return (
@@ -68,7 +48,5 @@ storiesOf('Button', module)
     );
   })
   .add('with arrow', () => {
-    return (
-      <Button arrow>Arrow!</Button>
-    );
+    return <Button arrow>Arrow!</Button>;
   });

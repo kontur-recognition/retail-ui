@@ -1,5 +1,5 @@
 // @flow
-
+/* eslint-disable flowtype/no-weak-types */
 import DatePicker from './DatePicker.js';
 
 const DatePickerAdapter = {
@@ -25,7 +25,6 @@ const DatePickerAdapter = {
     const date = value ? new Date(value) : null;
     onChange && onChange({ target: { value: date } }, date);
   }
-
 };
 
 (DatePicker: any).__ADAPTER__ = DatePickerAdapter;

@@ -1,4 +1,6 @@
-import React, { PropTypes } from 'react';
+import React from 'react';
+
+import PropTypes from 'prop-types';
 
 import filterProps from '../filterProps';
 import MenuHeader from '../MenuHeader/MenuHeader';
@@ -9,6 +11,7 @@ import Select from '../Select';
 const PASS_PROPS = {
   _renderButton: true,
   error: true,
+  disabled: true,
   disablePortal: true,
   menuAlign: true,
   menuWidth: true,
@@ -43,6 +46,11 @@ export default class Dropdown extends React.Component {
     disablePortal: PropTypes.bool,
 
     /**
+     * Визуально отключает Dropdown
+     */
+    disabled: PropTypes.bool,
+
+    /**
      * Визуально показать наличие ошибки.
      */
     error: PropTypes.bool,
@@ -56,10 +64,7 @@ export default class Dropdown extends React.Component {
 
     menuAlign: PropTypes.oneOf(['left', 'right']),
 
-    menuWidth: PropTypes.oneOfType([
-      PropTypes.number,
-      PropTypes.string
-    ]),
+    menuWidth: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
 
     size: PropTypes.oneOf(['small', 'medium', 'large']),
 
@@ -115,6 +120,13 @@ export default class Dropdown extends React.Component {
    */
   open() {
     this._select.open();
+  }
+
+  /**
+   * @api
+   */
+  close() {
+    this._select.close();
   }
 }
 

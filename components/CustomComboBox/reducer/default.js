@@ -1,6 +1,7 @@
 // @flow
+/* eslint-disable flowtype/no-weak-types */
 /* global $Subtype */
-import React from 'react';
+import * as React from 'react';
 import debounce from 'lodash.debounce';
 
 import MenuItem from '../../MenuItem';
@@ -13,25 +14,21 @@ import type CustomComboBox, {
 
 type Action = $Subtype<{ type: string }>;
 
-export type Props =
-  & {
-    getItems: (query: string) => Promise<any[]>,
-    itemToValue?: (any) => string,
-    onBlur?: () => {},
-    onChange?: () => {},
-    onFocus?: () => {},
-    onInputChange?: (textValue: string) => any,
-    onUnexpectedInput?: (query: string) => ?boolean,
-    valueToString?: (any) => string
-  }
-  & CustomComboBoxProps<any>;
+export type Props = CustomComboBoxProps<any> & {
+  getItems: (query: string) => Promise<any[]>,
+  itemToValue?: any => string,
+  onBlur?: () => {},
+  onChange?: ({ target: { value: any } }, value: any) => {},
+  onFocus?: () => {},
+  onInputChange?: (textValue: string) => any,
+  onUnexpectedInput?: (query: string) => ?boolean,
+  valueToString?: any => string
+};
 
-export type State =
-  & {
-    inputChanged?: boolean,
-    focused?: boolean
-  }
-  & CustomComboBoxState<any>;
+export type State = {
+  inputChanged?: boolean,
+  focused?: boolean
+} & CustomComboBoxState<any>;
 
 export type EffectType = (
   dispatch: (action: Action) => void,
@@ -40,32 +37,37 @@ export type EffectType = (
   getInstance: () => CustomComboBox
 ) => void;
 
-export type Reducer = (state: State, props: Props, action: Action) =>
-  State
-  | [State, EffectType[]];
+export type Reducer = (
+  state: State,
+  props: Props,
+  action: Action
+) => State | [State, EffectType[]];
 
 let requestId = 0;
-const searchFactory = (isEmpty: boolean): EffectType =>
-  (dispatch, getState, getProps) => {
-    async function makeRequest() {
-      dispatch({ type: 'RequestItems' });
-      const { getItems } = getProps();
-      const searchValue = isEmpty ? '' : getState().textValue;
-      let expectingId = ++requestId;
+const searchFactory = (isEmpty: boolean): EffectType => (
+  dispatch,
+  getState,
+  getProps
+) => {
+  async function makeRequest() {
+    dispatch({ type: 'RequestItems' });
+    const { getItems } = getProps();
+    const searchValue = isEmpty ? '' : getState().textValue;
+    let expectingId = ++requestId;
 
-      try {
-        const items = await getItems(searchValue);
-        if (expectingId === requestId) {
-          dispatch({ type: 'ReceiveItems', items });
-        }
-      } catch (e) {
-        if (expectingId === requestId) {
-          dispatch({ type: 'RequestFailure', repeatRequest: makeRequest });
-        }
+    try {
+      const items = await getItems(searchValue);
+      if (expectingId === requestId) {
+        dispatch({ type: 'ReceiveItems', items });
+      }
+    } catch (e) {
+      if (expectingId === requestId) {
+        dispatch({ type: 'RequestFailure', repeatRequest: makeRequest });
       }
     }
-    makeRequest();
-  };
+  }
+  makeRequest();
+};
 
 const Effect = {
   Search: searchFactory,
@@ -78,16 +80,18 @@ const Effect = {
     const { onFocus } = getProps();
     onFocus && onFocus();
   }: EffectType),
-  Change: (value: any): EffectType =>
-    (dispatch, getState, getProps) => {
-      const { onChange } = getProps();
-      onChange && onChange({ target: { value } }, value);
-    },
-  UnexpectedInput: (textValue: string): EffectType =>
-    (dispatch, getState, getProps) => {
-      const { onUnexpectedInput } = getProps();
-      onUnexpectedInput && onUnexpectedInput(textValue);
-    },
+  Change: (value: any): EffectType => (dispatch, getState, getProps) => {
+    const { onChange } = getProps();
+    onChange && onChange({ target: { value } }, value);
+  },
+  UnexpectedInput: (textValue: string): EffectType => (
+    dispatch,
+    getState,
+    getProps
+  ) => {
+    const { onUnexpectedInput } = getProps();
+    onUnexpectedInput && onUnexpectedInput(textValue);
+  },
   InputChange: ((dispatch, getState, getProps) => {
     const { onInputChange } = getProps();
     const { textValue } = getState();
@@ -101,7 +105,7 @@ const Effect = {
   HighlightMenuItem: ((dispatch, getState, getProps, getInstance) => {
     const { value, itemToValue } = getProps();
     const { items, focused } = getState();
-    const { menu }: { menu: Menu } = getInstance();
+    const { menu }: { menu: ?Menu } = getInstance();
 
     if (!menu) {
       return;
@@ -122,15 +126,20 @@ const Effect = {
       process.nextTick(() => menu && menu.down());
     }
   }: EffectType),
-  SelectMenuItem: ((dispatch, getState, getProps, getInstance) => {
-    const { menu }: { menu: Menu } = getInstance();
-    menu && menu.enter();
-  }: EffectType),
-  MoveMenuHighlight: (direction: 1 | -1): EffectType =>
-    (dispatch, getState, getProps, getInstance) => {
-      const { menu }: { menu: Menu } = getInstance();
-      menu && menu._move(direction);
-    }
+  SelectMenuItem: (event: SyntheticEvent<*>) =>
+    ((dispatch, getState, getProps, getInstance) => {
+      const { menu }: { menu: ?Menu } = getInstance();
+      menu && menu.enter(event);
+    }: EffectType),
+  MoveMenuHighlight: (direction: 1 | -1): EffectType => (
+    dispatch,
+    getState,
+    getProps,
+    getInstance
+  ) => {
+    const { menu }: { menu: ?Menu } = getInstance();
+    menu && menu._move(direction);
+  }
 };
 
 const reducers: { [type: string]: Reducer } = {
@@ -223,7 +232,7 @@ const reducers: { [type: string]: Reducer } = {
     switch (event.key) {
       case 'Enter':
         event.preventDefault();
-        return [state, [Effect.SelectMenuItem]];
+        return [state, [Effect.SelectMenuItem(event)]];
       case 'ArrowUp':
       case 'ArrowDown':
         event.preventDefault();
@@ -274,8 +283,8 @@ const reducers: { [type: string]: Reducer } = {
         items: [
           <MenuItem disabled>
             <div style={{ maxWidth: 300, whiteSpace: 'normal' }}>
-              Что-то пошло не так. Проверьте соединение{' '}
-              с интернетом и попробуйте еще раз
+              Что-то пошло не так. Проверьте соединение с интернетом и
+              попробуйте еще раз
             </div>
           </MenuItem>,
           <MenuItem alkoLink onClick={action.repeatRequest}>
