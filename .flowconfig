@@ -3,12 +3,15 @@
 .*/node_modules/stylelint/.*
 .*/node_modules/immutable/.*
 .*/node_modules/radium/src/.*
+.*/node_modules/findup/test/.*
 .*/docs/node_modules/fbjs/.*
 
 [include]
 
 [libs]
 flow/testing.js
+flow/cssom.js
+# node_modules/jss/flow-typed
 
 [options]
 esproposal.class_static_fields=enable
@@ -17,6 +20,8 @@ esproposal.class_instance_fields=enable
 munge_underscores=true
 
 suppress_comment=.*\\$FlowIssue.*
+suppress_comment=.*\\$FlowFixMe.*
+suppress_comment=.*\\$FlowIgnore.*
 
 module.name_mapper='^.*\.less+$' -> '<PROJECT_ROOT>/flow/CssStub'
 module.name_mapper='^.*\.png+$' -> '<PROJECT_ROOT>/flow/StringStub'

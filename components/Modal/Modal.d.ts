@@ -5,7 +5,7 @@ export interface ModalProps {
   disableClose?: boolean;
   ignoreBackgroundClick?: boolean;
   noClose?: boolean;
-  width?: number;
+  width?: number | string;
   onClose?: () => void;
 }
 
@@ -13,15 +13,20 @@ export interface ModalState {
   shadowed: boolean;
 }
 
-export interface ModalHeaderProps {}
+export interface ModalHeaderProps {
+  children: React.ReactNode;
+}
 
 export interface ModalHeaderState {}
 
-export interface ModalBodyProps {}
+export interface ModalBodyProps {
+  children: React.ReactNode;
+}
 
 export interface ModalBodyState {}
 
 export interface ModalFooterProps {
+  children: React.ReactNode;
   panel?: boolean;
 }
 

@@ -12,6 +12,7 @@ import RenderLayer from '../RenderLayer';
 import Spinner from '../Spinner';
 
 type Props<T> = {
+  disablePortal?: boolean,
   disabled?: boolean,
   editing?: boolean,
   error?: boolean,
@@ -27,6 +28,7 @@ type Props<T> = {
   value?: ?T,
   warning?: boolean,
   width: string | number,
+  maxMenuHeight?: number | string,
 
   onChange: T => mixed,
   onClickOutside: () => void,
@@ -49,9 +51,9 @@ type Props<T> = {
 
 class ComboBoxView<T> extends React.Component<Props<T>> {
   static defaultProps = {
-    renderItem: (x, i) => x,
+    renderItem: (x: *, i: *) => x,
     renderNotFound: () => 'Не найдено',
-    renderValue: x => x,
+    renderValue: (x: *) => x,
     onClickOutside: () => {},
     onFocusOutside: () => {},
     onChange: () => {},
@@ -158,6 +160,7 @@ class ComboBoxView<T> extends React.Component<Props<T>> {
               align={menuAlign}
               getParent={() => findDOMNode(this)}
               offsetY={1}
+              disablePortal={this.props.disablePortal}
             >
               {menu}
             </DropdownContainer>
@@ -175,7 +178,8 @@ class ComboBoxView<T> extends React.Component<Props<T>> {
       loading,
       refMenu,
       renderNotFound,
-      renderTotalCount
+      renderTotalCount,
+      maxMenuHeight
     } = this.props;
 
     if (!opened) {
@@ -214,7 +218,7 @@ class ComboBoxView<T> extends React.Component<Props<T>> {
     }
 
     return (
-      <Menu ref={refMenu}>
+      <Menu ref={refMenu} maxHeight={maxMenuHeight}>
         {items && items.map(this.renderItem)}
         {total}
       </Menu>

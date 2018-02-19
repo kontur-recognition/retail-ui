@@ -4,7 +4,7 @@ import { Children, Component } from 'react';
 import type { Node } from 'react';
 import withFocusOutside from '../internal/withFocusOutside';
 
-type Props = {
+type Props = {|
   children?: Node,
   onClickOutside: (e: Event) => mixed,
   onFocusOutside: (e: Event) => mixed,
@@ -12,27 +12,31 @@ type Props = {
   subscribeToOutsideClicks: (fn: (e: Event) => mixed) => () => void,
   active?: boolean,
   innerRef?: void
-};
+|};
 
 class RenderLayer extends Component<Props> {
-  unsibscribeFocusOutside: () => void;
-  unsibscribeClickOutside: () => void;
+  unsubscribeFocusOutside: () => void;
+  unsubscribeClickOutside: () => void;
 
   componentDidMount() {
-    this.unsibscribeFocusOutside = this.props.subscribeToOutsideFocus(
-      this.props.onFocusOutside
-    );
-    this.unsibscribeClickOutside = this.props.subscribeToOutsideClicks(
-      this.props.onClickOutside
-    );
+    if (this.props.onFocusOutside) {
+      this.unsubscribeFocusOutside = this.props.subscribeToOutsideFocus(
+        this.props.onFocusOutside
+      );
+    }
+    if (this.props.onClickOutside) {
+      this.unsubscribeClickOutside = this.props.subscribeToOutsideClicks(
+        this.props.onClickOutside
+      );
+    }
   }
 
   componentWillUnmount() {
-    if (this.unsibscribeFocusOutside) {
-      this.unsibscribeFocusOutside();
+    if (this.unsubscribeFocusOutside) {
+      this.unsubscribeFocusOutside();
     }
-    if (this.unsibscribeClickOutside) {
-      this.unsibscribeClickOutside();
+    if (this.unsubscribeClickOutside) {
+      this.unsubscribeClickOutside();
     }
   }
 

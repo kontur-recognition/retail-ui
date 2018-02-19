@@ -1,16 +1,11 @@
 import { mount } from 'enzyme';
 import React from 'react';
-
 import RenderContainer from '../../RenderContainer';
 import Tooltip from '../Tooltip.js';
 
 jest.mock('../../RenderContainer/RenderContainer.js', () => {
   return function RenderContainerMock(props) {
-    return (
-      <div>
-        {props.children}
-      </div>
-    );
+    return <div>{props.children}</div>;
   };
 });
 
@@ -39,7 +34,7 @@ describe('Tooltip', () => {
     expect(refFn1.mock.calls[1][0]).toBe(null);
 
     expect(refFn2.mock.calls.length).toBe(1);
-    expect(refFn2.mock.calls[0][0]).toBe(wrapper.find('div').node);
+    expect(refFn2.mock.calls[0][0]).toBe(wrapper.find('div').instance());
   });
 
   it('calls onFocus/onBlur when trigger=focus', () => {
@@ -87,7 +82,6 @@ describe('Tooltip', () => {
         <div />
       </Tooltip>
     );
-
     wrapper.find('.cross').simulate('click');
     expect(onClose.mock.calls.length).toBe(1);
   });

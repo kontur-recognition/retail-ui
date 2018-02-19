@@ -22,6 +22,7 @@ export type Action<T> =
 
 export type CustomComboBoxProps<T> = {
   autoFocus?: boolean,
+  disablePortal?: boolean,
   disabled?: boolean,
   error?: boolean,
   menuAlign?: 'left' | 'right',
@@ -35,6 +36,7 @@ export type CustomComboBoxProps<T> = {
   value?: ?T,
   warning?: boolean,
   width?: string | number,
+  maxMenuHeight?: number | string,
   renderItem?: (T, index?: number) => React.Node,
   renderNotFound?: () => React.Node,
   renderValue?: T => React.Node,
@@ -125,6 +127,7 @@ class CustomComboBox extends React.Component<Props<*>, CustomComboBoxState<*>> {
   render() {
     const viewProps = {
       disabled: this.props.disabled,
+      disablePortal: this.props.disablePortal,
       editing: this.state.editing,
       error: this.props.error,
       items: this.state.items,
@@ -139,6 +142,7 @@ class CustomComboBox extends React.Component<Props<*>, CustomComboBoxState<*>> {
       value: this.props.value,
       warning: this.props.warning,
       width: this.props.width,
+      maxMenuHeight: this.props.maxMenuHeight,
 
       onChange: value => this.dispatch({ type: 'ValueChange', value }),
       onClickOutside: this.handleBlur,

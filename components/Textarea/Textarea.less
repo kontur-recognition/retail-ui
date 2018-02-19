@@ -17,7 +17,18 @@
     line-height: 16px;
     outline: none;
     padding: 8px;
+    vertical-align: middle;
     width: 100%;
+    -webkit-appearance: none;
+    transition: height 0.2s ease-out;
+  }
+
+  .fake {
+    position: absolute;
+    height: 0;
+    width: 100%;
+    top: 0;
+    visibility: hidden;
   }
 
   .deprecated_oldSize {
@@ -26,7 +37,6 @@
 
   .textarea:focus {
     border-color: @border-color-focus;
-    border-radius: 1px;
     box-shadow: 0 0 0 1px @border-color-focus;
     position: relative;
     z-index: 2;
@@ -36,7 +46,7 @@
     .textarea:focus {
       outline: 1px solid @border-color-focus;
     }
-    
+
     .error,
     .error:focus {
       outline: 1px solid @border-color-error;
@@ -52,11 +62,10 @@
   .placeholder {
     position: absolute;
     z-index: 3;
-    top: 1px;
+    top: 9px;
     right: 24px;
     left: 9px;
-    height: 32px;
-    line-height: 32px;
+    line-height: 16px;
     font-size: 14px;
     color: #aaa;
     overflow: hidden;

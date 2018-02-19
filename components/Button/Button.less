@@ -1,5 +1,5 @@
-@import "../variables.less";
-@import (reference) "../Link/Link.less";
+@import '../variables.less';
+@import (reference) '../Link/Link.less';
 
 :local {
   @focus-shadow: 0 0 0 1px @border-color-focus,
@@ -49,7 +49,7 @@
     }
 
     &:after {
-      content: "";
+      content: '';
       display: inline-block;
       vertical-align: baseline;
       width: 0;
@@ -92,7 +92,7 @@
 
         &:before {
           background: @arrow_loading;
-          content: "";
+          content: '';
           height: @arrow_loading_height;
           position: absolute;
           opacity: 0.2;
@@ -236,7 +236,7 @@
         &:before {
           border: 1px solid #fff;
           bottom: 0;
-          content: "";
+          content: '';
           left: 0;
           outline: 2px solid @border-color-focus;
           position: absolute;
@@ -271,10 +271,19 @@
   );
 
   .sizeMedium {
+    font-size: 16px;
     height: 38px;
     line-height: 38px;
     padding: 0 15px;
   }
+
+  .DEPRECATED_sizeMedium {
+    font-size: 14px;
+    height: 38px;
+    line-height: 38px;
+    padding: 0 15px;
+  }
+
   .buttonSizeMixin(
     sizeMedium,
     20.2px,
@@ -311,7 +320,7 @@
   // Use Default
 
   .buttonColorMixin(
-    use-default,
+    default,
     @btn-default-hover-bg-start,
     @btn-default-hover-bg-end,
     @btn-default-hover-shadow,
@@ -331,7 +340,7 @@
   // Use Primary
 
   .buttonColorMixin(
-    use-primary,
+    primary,
     @btn-primary-hover-bg-start,
     @btn-primary-hover-bg-end,
     @btn-primary-hover-shadow,
@@ -350,7 +359,7 @@
   // Use Success
 
   .buttonColorMixin(
-    use-success,
+    success,
     @btn-success-hover-bg-start,
     @btn-success-hover-bg-end,
     @btn-success-hover-shadow,
@@ -369,7 +378,7 @@
   // Use Danger
 
   .buttonColorMixin(
-    use-danger,
+    danger,
     @btn-danger-hover-bg-start,
     @btn-danger-hover-bg-end,
     @btn-danger-hover-shadow,
@@ -388,7 +397,7 @@
   // Use Pay
 
   .buttonColorMixin(
-    use-pay,
+    pay,
     @btn-pay-hover-bg-start,
     @btn-pay-hover-bg-end,
     @btn-pay-hover-shadow,
@@ -406,9 +415,8 @@
 
   // Use Link
 
-  .root.use-link {
+  .root.link {
     display: inline;
-    height: inherit;
     padding: 0;
     margin: 0;
     background: none;
@@ -425,13 +433,17 @@
       background: none;
     }
 
+    &.focus .caption {
+      text-decoration: underline;
+    }
+
     .icon {
       padding-right: @linkIconPadding;
     }
   }
 
   .linkMixin(
-    use-link,
+    link,
     @link-color,
     @link-hover-color,
     @link-hover-color,
@@ -521,7 +533,7 @@
   }
 
   .loading:before {
-    content: "";
+    content: '';
     height: 100%;
     position: absolute;
     opacity: 0.2;

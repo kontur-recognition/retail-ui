@@ -21,7 +21,7 @@ const PASS_PROPS = {
   warning: true,
   width: true,
   onOpen: true,
-
+  onClose: true,
   onMouseEnter: true,
   onMouseLeave: true,
   onMouseOver: true,
@@ -80,6 +80,11 @@ export default class Dropdown extends React.Component {
 
     width: PropTypes.number,
 
+    /**
+     * Вызывается при закрытии меню.
+     */
+    onClose: PropTypes.func,
+
     onMouseEnter: PropTypes.func,
 
     onMouseLeave: PropTypes.func,
@@ -116,14 +121,14 @@ export default class Dropdown extends React.Component {
   };
 
   /**
-   * @api
+   * @public
    */
   open() {
     this._select.open();
   }
 
   /**
-   * @api
+   * @public
    */
   close() {
     this._select.close();

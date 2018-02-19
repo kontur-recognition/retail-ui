@@ -1,15 +1,21 @@
 import * as React from 'react';
 
 export interface MenuProps {
-  children?: React.ReactElement<any> | React.ReactElement<any>[];
+  children?: React.ReactNode;
   hasShadow?: boolean;
-  maxHeight?: number;
+  maxHeight?: number | string;
   onItemClick?: () => void;
   width?: number | string;
+  preventWindowScroll?: boolean;
 }
 
 export interface MenuState {
   highlightedIndex: number;
 }
 
-export default class Menu extends React.Component<MenuProps, MenuState> {}
+export default class Menu extends React.Component<MenuProps, MenuState> {
+  up(): void;
+  down(): void;
+  enter(event: React.SyntheticEvent<HTMLElement>): void;
+  reset(): void;
+}

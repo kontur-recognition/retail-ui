@@ -16,6 +16,13 @@ export type ExternalProps<T> = {
 
   autoFocus?: boolean,
 
+  /**
+   * Не использовать Portal для рендеринга меню.
+   * По-умолчанию `false`.
+   * См. https://github.com/skbkontur/retail-ui/issues/15
+   */
+  disablePortal?: boolean,
+
   disabled?: boolean,
 
   error?: boolean,
@@ -103,10 +110,12 @@ export type ExternalProps<T> = {
 
   warning?: boolean,
 
-  width?: string | number
+  width?: string | number,
+
+  maxMenuHeight?: number | string
 };
 
-const defaltReducer = createReducer(defaultReducers);
+const defaultReducer = createReducer(defaultReducers);
 const autocompleteReducer = createReducer(autocompleteReducers);
 
 class ComboBox<T> extends React.Component<ExternalProps<T>> {
@@ -125,8 +134,8 @@ class ComboBox<T> extends React.Component<ExternalProps<T>> {
   _cb: ?CustomComboBox = null;
 
   /**
-  * @api
-  */
+   * @public
+   */
   focus() {
     if (this._cb) {
       this._cb.focus();
@@ -138,7 +147,7 @@ class ComboBox<T> extends React.Component<ExternalProps<T>> {
     const props = {
       ...rest,
       openButton: !autocomplete,
-      reducer: autocomplete ? autocompleteReducer : defaltReducer
+      reducer: autocomplete ? autocompleteReducer : defaultReducer
     };
     return <CustomComboBox {...props} ref={cb => (this._cb = cb)} />;
   }
