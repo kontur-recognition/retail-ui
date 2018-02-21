@@ -423,6 +423,11 @@
     border: none;
     box-shadow: none;
     line-height: inherit;
+    height: auto;
+
+    .caption {
+      display: inline;
+    }
 
     &:active {
       vertical-align: 0;
@@ -431,10 +436,6 @@
     &.disabled {
       box-shadow: none;
       background: none;
-    }
-
-    &.focus .caption {
-      text-decoration: underline;
     }
 
     .icon {
