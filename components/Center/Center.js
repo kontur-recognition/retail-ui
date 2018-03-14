@@ -2,8 +2,15 @@
 import * as React from 'react';
 
 import PropTypes from 'prop-types';
+import styled from '../internal/styledRender';
 
-import styles from './Center.less';
+let cssStyles;
+let jssStyles;
+if (process.env.EXPERIMENTAL_CSS_IN_JS) {
+  jssStyles = require('./Center.styles').default;
+} else {
+  cssStyles = require('./Center.less');
+}
 
 type Props = {
   align?: 'left' | 'center' | 'right',
@@ -23,14 +30,16 @@ export default class Center extends React.Component<Props> {
     /**
      * Горизонтальное выравнивание контента.
      */
-    align: PropTypes.oneOf(['left', 'center', 'right'])
+    align: PropTypes.oneOf(['left', 'center', 'right']),
+
+    style: PropTypes.object
   };
 
   static defaultProps = {
     align: 'center'
   };
 
-  render() {
+  render = styled(cssStyles, jssStyles, styles => {
     const { align, style, children, ...rest } = this.props;
 
     const styleJoined = Object.assign({ textAlign: align }, style);
@@ -41,5 +50,5 @@ export default class Center extends React.Component<Props> {
         <span className={styles.container}>{children}</span>
       </div>
     );
-  }
+  });
 }
